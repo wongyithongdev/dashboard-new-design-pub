@@ -1,32 +1,220 @@
-# 365Biz Auth Design Rules
+# 365Biz Design Rules
 
-> Scope: `/login` and `/register`
+> Scope: `/login`, `/register`, `/welcome`, `/purchase-invoice`, shared sidebar, and future dashboard pages.
 >
-> Goal: Keep the auth pages clean, calm, Notion-like, and consistent.
+> Goal: Keep the product clean, calm, rounded, fast, and consistent. The visual direction is Notion-like with Linear-style sidebar density and Apple HIG interaction discipline.
 
 ## Design Direction
 
 | Rule | Decision |
 |---|---|
-| Visual style | Quiet product UI, not marketing hero |
-| Main reference | Notion auth style from `DESIGN-notion.md` |
-| Page mood | White, minimal, focused |
-| Accent use | Blue only for primary action, focus, selected state, and hover links |
-| Shape | Small rounded rectangles, not pill-heavy |
-| Motion | Only for state reveal, loading, dropdown arrow, and MFA counter |
+| Main mood | Clean, quiet, product-focused |
+| Main references | `DESIGN-notion.md`, `Linaer.md`, Apple HIG ideas |
+| Product feel | Minimal, soft, responsive, not decorative |
+| UI density | Auth pages are spacious; dashboard sidebar is compact |
+| Accent usage | Blue is for primary action, selected brand mark, focus, and important action links |
+| Shape language | Soft rounded rectangles and squircle marks |
+| Motion style | Small, fast, and purposeful |
 
 ```mermaid
 flowchart TD
-  A[Open auth page] --> B[Email]
-  B --> C[Password]
-  C --> D[MFA]
-  D --> E{Register?}
-  E -->|Yes| F[Scan QR first]
-  F --> G[Enter 6 digit MFA]
-  E -->|No| G[Enter 6 digit MFA]
+  A["365Biz UI"] --> B["Auth pages"]
+  A --> C["Welcome setup"]
+  A --> D["Dashboard shell"]
+  D --> E["Sidebar"]
+  D --> F["Main content"]
 ```
 
-## Layout
+## Global Font Rules
+
+| Area | Rule |
+|---|---|
+| Primary font | Use `Inter` from `next/font/google` |
+| CSS token | `--font-inter` |
+| Tailwind sans | `--font-sans: var(--font-inter)` |
+| English fallback | `-apple-system`, `BlinkMacSystemFont`, `Arial`, `Helvetica`, `sans-serif` |
+| Chinese fallback | `PingFang SC`, `Microsoft YaHei UI`, `Microsoft YaHei`, `Noto Sans CJK SC` |
+| Rendering | Use antialiasing, optical sizing, no synthetic font |
+| Font weight | Prefer `400`, `500`, `600`; avoid heavy bold |
+| Letter spacing | Keep neutral; only initials may use tight tracking |
+
+## Global Colors
+
+| Token | Color | Use |
+|---|---|---|
+| Page background | `#ffffff` | Main page canvas |
+| Sidebar background | `#f7f7f8` | Dashboard sidebar |
+| Sidebar divider | `rgba(0,0,0,0.055)` | Sidebar right separation |
+| Primary text | `#000000` | High emphasis text |
+| Dashboard selected text | `#2c2c2b` | Selected sidebar text |
+| Dashboard normal text | `#5f5e59` | Normal sidebar text |
+| Muted icon | `#6f6a64` | Unselected sidebar icons |
+| Soft text | `#8f8983` | Metadata and helper text |
+| Faint text | `#a39e98` | Placeholder and legal copy |
+| Hairline | `#e6e6e6` | Border and divider |
+| Warm divider | `#dedbd7` | Dropdown section divider |
+| Soft hover | `#ededee` | Sidebar hover |
+| Auth soft hover | `#f6f5f4` | Auth controls and dropdown hover |
+| Selected surface | `#e9e9ea` | Sidebar selected item |
+| Selected hover | `#e3e3e4` | Active quick nav hover |
+| Primary blue | `#0075de` | Main action and brand mark |
+| Primary blue hover | `#0b83ea` | Continue button hover |
+| Error red | `#d92d20` | Validation error |
+| Tooltip bg | `#2c2c2b` | Custom tooltip |
+| Tooltip shortcut | `#a8a8a5` | Tooltip shortcut text |
+
+## Shape Rules
+
+| Element | Radius |
+|---|---:|
+| Auth input | `8px` |
+| Auth primary button | `8px` |
+| Sidebar nav item | `8px` |
+| Sidebar category row | `7px` |
+| Small menu button | `6px` |
+| Dropdown surface | `11px` |
+| Company avatar | `10px` squircle |
+| Quick nav pill | Full pill |
+| Tooltip | `8px` |
+
+## Dashboard Sidebar
+
+| Rule | Decision |
+|---|---|
+| Component file | `src/components/sidebar.tsx` |
+| Width | `320px` on desktop |
+| Background | `#f7f7f8` |
+| Divider | Inset right shadow, not a harsh line |
+| Padding | `12px` |
+| Font | Inter, `14px` |
+| Normal text | `#5f5e59` |
+| Active text | `#2c2c2b` |
+| Normal icon | `#6f6a64` |
+| Active icon | `#2c2c2b` |
+| Hover | `#ededee`, no black border |
+| Focus | Soft ring only, no browser-blue visual style |
+| Cursor | Buttons must use pointer cursor |
+
+## Sidebar Header
+
+| Element | Rule |
+|---|---|
+| Company selector | `32px` height |
+| Company avatar | Squircle, `24px`, blue or soft gradient depending context |
+| Company name | `14px`, `500`, `#2c2c2b` |
+| Gap | Compact but not stuck |
+| Chevron | Right side, muted grey |
+| Dropdown | Opens below header with small motion |
+
+## Company Avatar
+
+| Rule | Decision |
+|---|---|
+| Shape | Rounded squircle, not circle |
+| Header size | `24px` |
+| Dropdown list size | `15px` |
+| Dropdown detail size | `24px` |
+| Text | Company initials |
+| Text weight | `600` |
+| Tracking | Slight tight tracking |
+| Preferred style | Soft color, rounded, clean |
+
+## Sidebar Quick Navigation
+
+| Item | Display |
+|---|---|
+| Home | Icon + text when active |
+| Chat | Icon + text when active |
+| Manage | Icon + text when active |
+| Search | Icon only, pushed to far right |
+
+| Rule | Decision |
+|---|---|
+| Row height | `32px` |
+| Active item | Pill surface `#e9e9ea` |
+| Inactive item | `32px` icon button |
+| Active text | Only active item shows text |
+| Chat visible label | `Chat` |
+| Chat tooltip | `Chat with Amate` |
+| Manage icon | Do not use gear; use a tray/inbox style icon |
+| Search | Does not participate in active state |
+| Animation | Use the earlier simple transition version unless changed intentionally |
+
+## Sidebar Categories
+
+| Rule | Decision |
+|---|---|
+| Category style | Small, Linear-like row |
+| Category height | `24px` |
+| Category font | `14px`, `500` |
+| Category color | `#5f5e59` |
+| Category icon | Small chevron |
+| Collapse | Category rows are collapsible |
+| Spacing between groups | About `12px` |
+
+## Sidebar Items
+
+| Rule | Decision |
+|---|---|
+| Row height | `28px` |
+| Font size | `14px` |
+| Font weight | `500` |
+| Icon size | `15px` |
+| Icon stroke | Around `1.85` |
+| Item gap | `8px` |
+| Active bg | `#e9e9ea` |
+| Hover bg | `#ededee` |
+| Normal text | `#5f5e59` |
+| Active text | `#2c2c2b` |
+| Normal icon | `#6f6a64` |
+| Active icon | `#2c2c2b` |
+
+## Sidebar Navigation Structure
+
+| Category | Items |
+|---|---|
+| Cashbook | Cashbook |
+| Accounts payable | APInvoice, Purchase invoice, APPayment, Good Receive note |
+| Accounts receivable | Sales invoice, ARPayment, Sales order |
+| Service | Joborder (management), Joborder (employee) |
+| Report | Cashflow report, Salesreport |
+
+## Icon Rules
+
+| Rule | Decision |
+|---|---|
+| Icon library | `lucide-react` |
+| Style | Thin linear icons |
+| Default color | Grey, not colorful |
+| Active color | Same as selected text |
+| Hover color | Darker grey, matching selected text |
+| Invoice icons | Avoid using identical icons for every invoice type |
+| Report icons | Keep grey unless a future page explicitly needs color |
+| Gear icon | Do not use for `Manage` quick nav |
+
+## Custom Tooltip
+
+| Rule | Decision |
+|---|---|
+| Tooltip type | Custom tooltip, not browser `title` |
+| Background | `#2c2c2b` |
+| Text | White |
+| Shortcut text | `#a8a8a5` |
+| Font size | `12px` |
+| Radius | `8px` |
+| Padding | Compact horizontal padding |
+| Shadow | Soft dark shadow |
+| Delay | Immediate or near immediate |
+| Placement | Below the icon |
+
+| Tooltip | Shortcut |
+|---|---|
+| Home | `H` |
+| Chat with Amate | `Ctrl/Control + Alt + C` |
+| Manage | `Ctrl/Control + Alt + M` |
+| Search | `Ctrl/Control + K` |
+
+## Auth Layout
 
 | Element | Rule |
 |---|---|
@@ -37,27 +225,9 @@ flowchart TD
 | Field spacing | `20px` between progressive fields |
 | Button spacing | `24px` above Continue |
 | Divider spacing | `24px` above, `20px` below |
-| Language selector | Fixed bottom center, close to bottom |
+| Language selector | Fixed bottom center |
 
-## Colors
-
-| Token | Color | Use |
-|---|---|---|
-| Background | `#ffffff` | Page canvas |
-| Primary text | `#000000` | Main title, button text on white |
-| Secondary text | `#31302e` | Labels, dropdown item main text |
-| Muted text | `#615d59` | Helper copy, language control |
-| Soft text | `#8f8983` | Subtitle, dropdown descriptions |
-| Faint text | `#a39e98` | Placeholder, divider text, legal text |
-| Hairline | `#e6e6e6` | Input border, button border, divider |
-| Soft hover | `#f6f5f4` | Google hover, language hover, dropdown option hover |
-| Primary blue | `#0075de` | Continue button, focus border, selected check, hover links |
-| Primary hover | `#0b83ea` | Continue hover |
-| Primary pressed | `#005bab` | Stronger blue reference only |
-| Focus ring | `#62aef0` at low opacity | Focus state |
-| Error red | `#d92d20` | Error border and error text |
-
-## Typography
+## Auth Typography
 
 | Element | Size | Weight | Line Height | Color |
 |---|---:|---:|---:|---|
@@ -73,16 +243,7 @@ flowchart TD
 | Dropdown main text | `14px` | `400` | `20px` | `#31302e` |
 | Dropdown subtext | `12px` | `400` | `16px` | `#8f8983` |
 
-## Font Rules
-
-| Language | Font Rule |
-|---|---|
-| English | Use the app sans stack from Geist, Apple system, Segoe UI |
-| Chinese | Prefer `PingFang SC`, then Microsoft YaHei UI, Microsoft YaHei, Noto Sans CJK SC |
-| Mixed text | Keep normal weight; avoid overly bold Chinese |
-| Letter spacing | Keep neutral; only Chinese dropdown label may use a tiny positive tracking |
-
-## Form Controls
+## Auth Form Controls
 
 | Control | Rule |
 |---|---|
@@ -90,14 +251,13 @@ flowchart TD
 | Input radius | `8px` |
 | Input border | `1px #e6e6e6` |
 | Input padding | `16px` horizontal |
-| MFA input right padding | Enough room for the counter |
 | Placeholder | `#a39e98` |
 | Focus border | `#0075de` |
 | Focus ring | Soft blue ring, low opacity |
 | Error border | `#d92d20` |
 | Error text | `13px`, red, `8px` below input |
 
-## Button Rules
+## Auth Button Rules
 
 | Button | Rule |
 |---|---|
@@ -106,7 +266,6 @@ flowchart TD
 | Continue background | `#0075de` |
 | Continue hover | `#0b83ea` |
 | Continue disabled/loading | `#62aef0` |
-| Continue shadow | Very light blue shadow |
 | Loading spinner | Right side, small, white stroke |
 | Google button | White background, hairline border, light grey hover |
 | QR scanned button | White, hairline border, light grey hover |
@@ -134,14 +293,6 @@ flowchart TD
 | Error layout | Error text must not affect counter position |
 | Register MFA | QR Code appears before MFA input |
 | Login MFA | MFA input appears directly after Password step |
-
-```mermaid
-flowchart TD
-  A[MFA input] --> B{Digits count}
-  B -->|0 to 5 on submit| C[Show red border and error]
-  B -->|User types| D[Clear red border and error]
-  B -->|6 digits| E[Normal state]
-```
 
 ## Register QR Rules
 
@@ -182,29 +333,48 @@ flowchart TD
 
 | Motion | Duration | Purpose |
 |---|---:|---|
-| Progressive field reveal | `180ms` | Show next step |
+| Sidebar hover | `75ms` | Make hover feel responsive |
+| Quick nav switch | `150ms` | Compact active-state change |
+| Dropdown open | `220ms` | Smooth but restrained |
+| Dropdown item stagger | `160ms` | Slight entry polish |
+| Progressive field reveal | `180ms` | Show next auth step |
 | MFA counter change | `160ms` | Make count change visible |
 | Language arrow | `180ms` | Reflect dropdown state |
 | Button loading | `650ms` simulated | Show transition to next step |
+
+## Accessibility
+
+| Rule | Decision |
+|---|---|
+| Buttons | Must use pointer cursor |
+| Disabled | Must use not-allowed cursor |
+| Focus | Use subtle focus-visible ring |
+| Native title | Avoid for designed tooltip areas |
+| Reduced motion | Disable non-essential animation |
+| Icon buttons | Must have `aria-label` |
+| Active nav | Use `aria-current="page"` where relevant |
 
 ## Do
 
 | Do | Why |
 |---|---|
-| Keep all auth controls at the same height | Makes the page feel stable |
-| Keep blue reserved for actions and focus | Prevents visual noise |
-| Keep errors red and direct | Users understand what to fix |
-| Keep QR inside the MFA step only | Registration MFA setup needs scan first |
-| Keep `/login` and `/register` visually identical | Same product, same trust level |
+| Use Inter for product UI | Keeps sidebar rounder and cleaner |
+| Keep dashboard sidebar compact | Feels more like Linear |
+| Keep hover light and quick | Makes UI feel responsive |
+| Keep icons grey by default | Avoids visual noise |
+| Keep blue reserved | Maintains clear action hierarchy |
+| Keep auth pages stable and centered | Builds trust |
+| Use custom tooltip when shortcuts matter | Better than browser native tooltip |
 
 ## Do Not
 
 | Do Not | Reason |
 |---|---|
-| Do not use large cards around the whole form | The current design should feel integrated |
-| Do not use heavy black hover borders | It feels harsh and unlike Notion |
-| Do not use native select styling | The language control is custom |
-| Do not make MFA counter align to the whole error block | It causes vertical drift |
-| Do not keep error visible while the user is typing | It feels broken |
-| Do not use decorative colors for main actions | Blue is the only structural accent |
+| Do not use heavy black hover borders | Too harsh |
+| Do not use native select styling | Looks inconsistent |
+| Do not use gear for quick `Manage` | Feels like settings, not module management |
+| Do not make every sidebar icon colorful | Too noisy |
+| Do not make sidebar rows too tall | Loses Linear-like density |
+| Do not over-animate quick nav | It should feel fast, not playful |
+| Do not keep errors visible while user types | Feels broken |
 
