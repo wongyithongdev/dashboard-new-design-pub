@@ -253,7 +253,7 @@ export function DashboardSidebar({
               size={14}
               strokeWidth={1.8}
               aria-hidden="true"
-              className={`shrink-0 text-[#8f8983] transition-transform duration-150 ${
+              className={`shrink-0 text-[#8f8983] transition-transform duration-250 ${
                 isBookMenuOpen ? "rotate-180" : ""
               }`}
             />
@@ -284,7 +284,7 @@ export function DashboardSidebar({
                   y: shouldReduceMotion ? 0 : -6,
                 }}
                 transition={{
-                  duration: shouldReduceMotion ? 0 : 0.22,
+                  duration: shouldReduceMotion ? 0 : 0.34,
                   ease: [0.22, 1, 0.36, 1],
                 }}
               >
@@ -351,8 +351,8 @@ export function DashboardSidebar({
                         }}
                         className="flex h-7 w-full items-center gap-2 rounded-[6px] px-2 text-left outline-none transition-colors duration-75 hover:bg-[#f6f5f4] focus-visible:bg-[#f6f5f4]"
                         transition={{
-                          delay: shouldReduceMotion ? 0 : 0.035 + index * 0.02,
-                          duration: shouldReduceMotion ? 0 : 0.16,
+                          delay: shouldReduceMotion ? 0 : 0.06 + index * 0.03,
+                          duration: shouldReduceMotion ? 0 : 0.24,
                           ease: [0.22, 1, 0.36, 1],
                         }}
                       >
@@ -431,7 +431,7 @@ export function DashboardSidebar({
                   onClick={() =>
                     setActiveQuickNav(item.id as "home" | "chat" | "manage")
                   }
-                  className={`group/quick relative flex h-8 items-center justify-center rounded-full text-[14px] font-medium leading-5 outline-none transition-all duration-150 focus-visible:ring-1 focus-visible:ring-black/5 ${
+                className={`group/quick relative flex h-8 items-center justify-center rounded-full text-[14px] font-medium leading-5 outline-none transition-all duration-[250ms] ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:ring-1 focus-visible:ring-black/5 ${
                     isActive
                       ? "gap-2 bg-[#e9e9ea] px-3 text-[#2c2c2b] hover:bg-[#e3e3e4] focus-visible:bg-[#e3e3e4]"
                       : "w-8 px-0 text-[#6f6a64] hover:bg-[#ededee] hover:text-[#2c2c2b] focus-visible:bg-[#ededee]"
@@ -444,7 +444,7 @@ export function DashboardSidebar({
                     className="shrink-0"
                   />
                   {isActive ? <span>{item.label}</span> : null}
-                  <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-[8px] bg-[#2c2c2b] px-2.5 py-1.5 text-[12px] font-medium leading-4 text-white opacity-0 shadow-[0_8px_22px_rgba(0,0,0,0.22)] transition-opacity duration-100 group-hover/quick:opacity-100 group-focus-visible/quick:opacity-100">
+                  <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-[8px] bg-[#2c2c2b] px-2.5 py-1.5 text-[12px] font-medium leading-4 text-white opacity-0 shadow-[0_8px_22px_rgba(0,0,0,0.22)] transition-opacity duration-[180ms] group-hover/quick:opacity-100 group-focus-visible/quick:opacity-100">
                     <span>{item.tooltip}</span>
                     <span className="text-[#a8a8a5]">{item.shortcut}</span>
                   </span>
@@ -489,6 +489,13 @@ export function DashboardSidebar({
                   {section.items.map((item) => {
                     const Icon = item.icon;
                     const isActive = item.id === activeItem;
+                    const itemIconStyle =
+                      "iconBg" in item && "iconColor" in item
+                        ? {
+                            background: String(item.iconBg),
+                            color: String(item.iconColor),
+                          }
+                        : null;
 
                     return (
                       <button
@@ -501,19 +508,24 @@ export function DashboardSidebar({
                             : "text-[#5f5e59] hover:bg-[#ededee] hover:text-[#2c2c2b]"
                         }`}
                       >
-                        <span
-                          className={`flex size-5 shrink-0 items-center justify-center ${
-                            isActive
-                              ? "text-[#2c2c2b]"
-                              : "text-[#6f6a64] transition-colors duration-75 group-hover:text-[#2c2c2b]"
-                          }`}
-                        >
-                          <Icon
-                            size={15}
-                            strokeWidth={1.85}
-                            aria-hidden="true"
-                          />
-                        </span>
+                        {itemIconStyle ? (
+                          <span
+                            className="flex size-5 shrink-0 items-center justify-center rounded-[5px]"
+                            style={itemIconStyle}
+                          >
+                            <Icon size={15} strokeWidth={1.85} aria-hidden="true" />
+                          </span>
+                        ) : (
+                          <span
+                            className={`flex size-5 shrink-0 items-center justify-center ${
+                              isActive
+                                ? "text-[#2c2c2b]"
+                                : "text-[#6f6a64] transition-colors duration-75 group-hover:text-[#2c2c2b]"
+                            }`}
+                          >
+                            <Icon size={15} strokeWidth={1.85} aria-hidden="true" />
+                          </span>
+                        )}
                         <span className="whitespace-nowrap">{item.label}</span>
                       </button>
                     );
