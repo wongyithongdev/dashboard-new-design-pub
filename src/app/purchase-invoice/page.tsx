@@ -439,7 +439,7 @@ function ViewInvoiceModal({
 
       {/* Drawer — spring slides in from right, fully visible from frame 1 */}
       <motion.div
-        className="relative z-10 flex h-full w-[620px] transform-gpu flex-col bg-white shadow-[-16px_0_48px_rgba(15,15,15,0.08),_-2px_0_8px_rgba(15,15,15,0.04)]"
+        className="relative z-10 flex h-full w-[var(--dashboard-drawer-w)] max-w-full transform-gpu flex-col bg-white shadow-[-16px_0_48px_rgba(15,15,15,0.08),_-2px_0_8px_rgba(15,15,15,0.04)]"
         initial={
           shouldReduceMotion
             ? { opacity: 0 }
@@ -682,7 +682,7 @@ export default function PurchaseInvoicePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white md:flex">
+    <div className="dashboard-shell min-h-screen bg-white md:flex">
       <DashboardSidebar activeItem="purchase-invoice" />
 
       <main className="min-h-[calc(100vh-64px)] min-w-0 flex-1 bg-white text-[#2c2c2b] md:min-h-screen">
@@ -695,7 +695,7 @@ export default function PurchaseInvoicePage() {
             ease: [0.22, 1, 0.36, 1],
           }}
         >
-          <header className="flex h-12 items-center justify-between border-b border-[#e6e6e6] px-6">
+          <header className="flex h-[var(--dashboard-header-h)] items-center justify-between border-b border-[#e6e6e6] px-[var(--dashboard-main-x)]">
             <div className="flex min-w-0 items-center">
               <h1 className="truncate text-[18px] font-semibold leading-6 text-[#2c2c2b]">
                 Purchase invoice
@@ -705,7 +705,7 @@ export default function PurchaseInvoicePage() {
             <div aria-hidden="true" />
           </header>
 
-          <div className="flex h-11 items-center justify-between gap-3 px-6">
+          <div className="flex h-[var(--dashboard-toolbar-h)] items-center justify-between gap-3 px-[var(--dashboard-main-x)]">
             <div className="inline-flex items-center gap-1 rounded-[8px] bg-[#f6f5f4] p-1">
               {[
                 {
@@ -749,10 +749,10 @@ export default function PurchaseInvoicePage() {
               Create invoice
             </button>
           </div>
-          <div className="mx-6 border-b border-[#e6e6e6]" />
+          <div className="mx-[var(--dashboard-main-x)] border-b border-[#e6e6e6]" />
 
-          <div className="flex h-11 items-center gap-2 px-6">
-            <label className="relative w-[260px] shrink-0">
+          <div className="flex h-[var(--dashboard-toolbar-h)] items-center gap-2 px-[var(--dashboard-main-x)]">
+            <label className="relative w-[var(--dashboard-toolbar-search-w)] max-w-[42vw] shrink">
               <span className="sr-only">
                 {isHistoryTab ? "Search history" : "Search invoices"}
               </span>
@@ -930,51 +930,51 @@ export default function PurchaseInvoicePage() {
               <Plus size={14} strokeWidth={1.8} aria-hidden="true" />
             </button>
           </div>
-          <div className="mx-6 border-b border-[#e6e6e6]" />
+          <div className="mx-[var(--dashboard-main-x)] border-b border-[#e6e6e6]" />
 
-          <div className="min-h-0 flex-1 overflow-auto px-6">
+          <div className="min-h-0 flex-1 overflow-auto px-[var(--dashboard-main-x)]">
             {activeTab === "invoices" ? (
-            <table className="w-full min-w-[1132px] table-fixed border-separate border-spacing-0 text-left">
+            <table className="w-full min-w-[var(--invoice-table-min-w)] table-fixed border-separate border-spacing-0 text-left">
               <thead className="sticky top-0 z-10 bg-white">
                 <tr>
                   {[
                     {
                       label: "Invoice No",
                       icon: Hash,
-                      width: "w-[170px]",
+                      width: "w-[var(--invoice-col-number)]",
                       key: "invoiceNo",
                     },
                     {
                       label: "Supplier",
                       icon: Store,
-                      width: "w-[240px]",
+                      width: "w-[var(--invoice-col-supplier)]",
                       key: "supplier",
                     },
                     {
                       label: "Date",
                       icon: CalendarDays,
-                      width: "w-[150px]",
+                      width: "w-[var(--invoice-col-date)]",
                       key: "date",
                     },
                     {
                       label: "Agent",
                       icon: UserRound,
-                      width: "w-[180px]",
+                      width: "w-[var(--invoice-col-agent)]",
                       key: "agent",
                     },
                     {
                       label: "Status",
                       icon: Circle,
-                      width: "w-[120px]",
+                      width: "w-[var(--invoice-col-status)]",
                       key: "paymentStatus",
                     },
                     {
                       label: "Amount",
                       icon: Sparkles,
-                      width: "w-[170px]",
+                      width: "w-[var(--invoice-col-amount)]",
                       key: "amount",
                     },
-                    { label: "Action", icon: Ellipsis, width: "w-[120px]" },
+                    { label: "Action", icon: Ellipsis, width: "w-[var(--invoice-col-action)]" },
                   ].map((column, colIdx, allColumns) => {
                     const Icon = column.icon;
                     const isAmount = column.label === "Amount";
@@ -998,7 +998,7 @@ export default function PurchaseInvoicePage() {
                               : "descending"
                             : undefined
                         }
-                        className={`${column.width} h-9 border-b ${isLastCol ? "" : "border-r"} border-[#e6e6e6] ${colPadding} text-[14px] font-medium leading-5 text-[#2c2c2b] ${
+                        className={`${column.width} h-[var(--dashboard-head-h)] border-b ${isLastCol ? "" : "border-r"} border-[#e6e6e6] ${colPadding} text-[14px] font-medium leading-5 text-[#2c2c2b] ${
                           isAmount || isAction ? "text-right" : ""
                         }`}
                       >
@@ -1080,7 +1080,7 @@ export default function PurchaseInvoicePage() {
                     <motion.tr
                       key={invoice.invoiceNo}
                       animate={{ opacity: 1 }}
-                      className="group h-10 bg-white transition-colors duration-75 hover:bg-[#f7f7f8]"
+                      className="group h-[var(--dashboard-row-h)] bg-white transition-colors duration-75 hover:bg-[#f7f7f8]"
                       initial={{ opacity: 0 }}
                       transition={{
                         delay: shouldReduceMotion ? 0 : index * 0.018,
@@ -1134,15 +1134,15 @@ export default function PurchaseInvoicePage() {
               </tbody>
             </table>
             ) : (
-              <table className="w-full min-w-[860px] table-fixed border-separate border-spacing-0 text-left">
+              <table className="w-full min-w-[var(--history-table-min-w)] table-fixed border-separate border-spacing-0 text-left">
                 <thead className="sticky top-0 z-10 bg-white">
                   <tr>
                     {[
-                      { label: "Taskname", icon: FileText, width: "w-[310px]" },
-                      { label: "Date", icon: CalendarDays, width: "w-[160px]" },
-                      { label: "Supplier", icon: Store, width: "w-[280px]" },
-                      { label: "Status", icon: Circle, width: "w-[150px]" },
-                      { label: "Action", icon: Ellipsis, width: "w-[120px]" },
+                      { label: "Taskname", icon: FileText, width: "w-[var(--history-col-task)]" },
+                      { label: "Date", icon: CalendarDays, width: "w-[var(--history-col-date)]" },
+                      { label: "Supplier", icon: Store, width: "w-[var(--history-col-supplier)]" },
+                      { label: "Status", icon: Circle, width: "w-[var(--history-col-status)]" },
+                      { label: "Action", icon: Ellipsis, width: "w-[var(--history-col-action)]" },
                     ].map((column, colIdx, allColumns) => {
                       const Icon = column.icon;
                       const isAction = column.label === "Action";
@@ -1154,7 +1154,7 @@ export default function PurchaseInvoicePage() {
                         <th
                           key={column.label}
                           scope="col"
-                          className={`${column.width} h-9 border-b ${isLastCol ? "" : "border-r"} border-[#e6e6e6] ${colPadding} text-[14px] font-medium leading-5 text-[#2c2c2b] ${
+                          className={`${column.width} h-[var(--dashboard-head-h)] border-b ${isLastCol ? "" : "border-r"} border-[#e6e6e6] ${colPadding} text-[14px] font-medium leading-5 text-[#2c2c2b] ${
                             isAction ? "text-right" : ""
                           }`}
                         >
@@ -1177,7 +1177,7 @@ export default function PurchaseInvoicePage() {
                     <motion.tr
                       key={`${history.taskName}-${history.supplier}`}
                       animate={{ opacity: 1 }}
-                      className="group h-10 bg-white transition-colors duration-75 hover:bg-[#f7f7f8]"
+                      className="group h-[var(--dashboard-row-h)] bg-white transition-colors duration-75 hover:bg-[#f7f7f8]"
                       initial={{ opacity: 0 }}
                       transition={{
                         delay: shouldReduceMotion ? 0 : index * 0.018,

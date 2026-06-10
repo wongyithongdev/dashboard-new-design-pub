@@ -28,6 +28,139 @@ body {
     sans-serif;
 }
 
+.dashboard-shell {
+  --dashboard-sidebar-w: 320px;
+  --dashboard-sidebar-x: 12px;
+  --dashboard-sidebar-y: 12px;
+  --dashboard-main-x: 32px;
+  --dashboard-header-h: 48px;
+  --dashboard-toolbar-h: 44px;
+  --dashboard-toolbar-search-w: 360px;
+  --dashboard-row-h: 40px;
+  --dashboard-head-h: 36px;
+  --dashboard-drawer-w: min(620px, calc(100vw - var(--dashboard-sidebar-w) - 48px));
+  --invoice-table-min-w: 1132px;
+  --invoice-col-number: 170px;
+  --invoice-col-supplier: 280px;
+  --invoice-col-date: 150px;
+  --invoice-col-agent: 190px;
+  --invoice-col-status: 130px;
+  --invoice-col-amount: 160px;
+  --invoice-col-action: 110px;
+  --history-table-min-w: 860px;
+  --history-col-task: 310px;
+  --history-col-date: 170px;
+  --history-col-supplier: 280px;
+  --history-col-status: 150px;
+  --history-col-action: 110px;
+}
+
+@media (min-width: 1681px) and (max-width: 1920px) and (hover: hover) and (pointer: fine) {
+  .dashboard-shell {
+    --dashboard-sidebar-w: 300px;
+    --dashboard-main-x: 28px;
+    --dashboard-toolbar-search-w: 340px;
+  }
+}
+
+@media (min-width: 1441px) and (max-width: 1680px) and (hover: hover) and (pointer: fine) {
+  .dashboard-shell {
+    --dashboard-sidebar-w: 280px;
+    --dashboard-main-x: 24px;
+    --dashboard-toolbar-search-w: 320px;
+    --dashboard-row-h: 38px;
+    --dashboard-drawer-w: min(600px, calc(100vw - var(--dashboard-sidebar-w) - 40px));
+    --invoice-table-min-w: 1068px;
+    --invoice-col-number: 158px;
+    --invoice-col-supplier: 252px;
+    --invoice-col-date: 140px;
+    --invoice-col-agent: 174px;
+    --invoice-col-status: 122px;
+    --invoice-col-amount: 148px;
+    --invoice-col-action: 96px;
+    --history-table-min-w: 820px;
+    --history-col-task: 290px;
+    --history-col-date: 160px;
+    --history-col-supplier: 260px;
+    --history-col-status: 138px;
+    --history-col-action: 96px;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1440px) and (hover: hover) and (pointer: fine) {
+  .dashboard-shell {
+    --dashboard-sidebar-w: 256px;
+    --dashboard-sidebar-x: 10px;
+    --dashboard-main-x: 20px;
+    --dashboard-toolbar-search-w: 300px;
+    --dashboard-row-h: 36px;
+    --dashboard-drawer-w: min(560px, calc(100vw - var(--dashboard-sidebar-w) - 32px));
+    --invoice-table-min-w: 1010px;
+    --invoice-col-number: 150px;
+    --invoice-col-supplier: 236px;
+    --invoice-col-date: 132px;
+    --invoice-col-agent: 170px;
+    --invoice-col-status: 118px;
+    --invoice-col-amount: 140px;
+    --invoice-col-action: 92px;
+    --history-table-min-w: 780px;
+    --history-col-task: 270px;
+    --history-col-date: 154px;
+    --history-col-supplier: 244px;
+    --history-col-status: 128px;
+    --history-col-action: 92px;
+  }
+}
+
+@media (min-width: 1024px) and (max-height: 900px) and (hover: hover) and (pointer: fine) {
+  .dashboard-shell {
+    --dashboard-sidebar-w: 256px;
+    --dashboard-sidebar-x: 10px;
+    --dashboard-main-x: 20px;
+    --dashboard-toolbar-search-w: 300px;
+    --dashboard-row-h: 36px;
+    --dashboard-drawer-w: min(560px, calc(100vw - var(--dashboard-sidebar-w) - 32px));
+    --invoice-table-min-w: 1010px;
+    --invoice-col-number: 150px;
+    --invoice-col-supplier: 236px;
+    --invoice-col-date: 132px;
+    --invoice-col-agent: 170px;
+    --invoice-col-status: 118px;
+    --invoice-col-amount: 140px;
+    --invoice-col-action: 92px;
+    --history-table-min-w: 780px;
+    --history-col-task: 270px;
+    --history-col-date: 154px;
+    --history-col-supplier: 244px;
+    --history-col-status: 128px;
+    --history-col-action: 92px;
+  }
+}
+
+@media (min-width: 1024px) and (min-height: 901px) and (max-height: 960px) and (hover: hover) and (pointer: fine) {
+  .dashboard-shell {
+    --dashboard-sidebar-w: 280px;
+    --dashboard-main-x: 24px;
+    --dashboard-toolbar-search-w: 320px;
+    --dashboard-row-h: 38px;
+    --dashboard-drawer-w: min(600px, calc(100vw - var(--dashboard-sidebar-w) - 40px));
+    --invoice-table-min-w: 1068px;
+    --invoice-col-number: 158px;
+    --invoice-col-supplier: 252px;
+    --invoice-col-date: 140px;
+    --invoice-col-agent: 174px;
+    --invoice-col-status: 122px;
+    --invoice-col-amount: 148px;
+    --invoice-col-action: 96px;
+    --history-table-min-w: 820px;
+    --history-col-task: 290px;
+    --history-col-date: 160px;
+    --history-col-supplier: 260px;
+    --history-col-status: 138px;
+    --history-col-action: 96px;
+  }
+}
+
 button:not(:disabled),
 [role="button"]:not([aria-disabled="true"]),
 a[href],

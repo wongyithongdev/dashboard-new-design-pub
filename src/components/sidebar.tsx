@@ -248,7 +248,7 @@ export function DashboardSidebar({
 
   return (
     <aside
-      className="bg-[#f7f7f8] md:h-screen md:w-[320px] md:shrink-0 md:shadow-[inset_-1px_0_0_rgba(0,0,0,0.055)]"
+      className="bg-[#f7f7f8] md:h-screen md:w-[var(--dashboard-sidebar-w)] md:shrink-0 md:shadow-[inset_-1px_0_0_rgba(0,0,0,0.055)]"
       style={{
         fontFamily:
           'var(--font-inter), "Inter Variable", Inter, sans-serif',
@@ -258,7 +258,7 @@ export function DashboardSidebar({
         WebkitFontSmoothing: "antialiased",
       }}
     >
-      <div className="flex h-full gap-1 overflow-x-auto px-3 py-3 md:flex-col md:gap-1 md:overflow-visible md:px-3 md:py-3">
+      <div className="flex h-full gap-1 overflow-x-auto px-3 py-3 md:flex-col md:gap-1 md:overflow-visible md:px-[var(--dashboard-sidebar-x)] md:py-[var(--dashboard-sidebar-y)]">
         <div ref={bookMenuRef} className="relative hidden md:block">
           <button
             type="button"

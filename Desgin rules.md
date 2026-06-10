@@ -378,3 +378,16 @@ flowchart TD
 | Do not over-animate quick nav | It should feel fast, not playful |
 | Do not keep errors visible while user types | Feels broken |
 
+## Dashboard Adaptive Fit
+
+| Rule | Decision |
+|---|---|
+| Scope | Dashboard pages only |
+| Do not use | CSS `zoom`, `transform: scale()`, or global `html font-size` for desktop fit |
+| Use instead | Dashboard CSS variables for sidebar width, content padding, row height, table columns, and drawer width |
+| Small laptop | Sidebar should narrow first, then table columns and drawer width should compact |
+| Auth pages | Login, register, and welcome stay independent from dashboard density |
+| Table fit | Keep important columns visible before relying on horizontal scrolling |
+| Drawer fit | Drawer width should depend on available space after sidebar, not fixed only |
+| Breakpoints | Support 1440x900, 1536x960, 1920x1200, and larger desktop without manual browser zoom |
+
