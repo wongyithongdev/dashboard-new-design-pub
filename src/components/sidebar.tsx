@@ -35,6 +35,8 @@ const sidebarSections = [
         id: "cashbook",
         label: "Cashbook",
         icon: Landmark,
+        iconBg: "#e0f2f0",
+        iconColor: "#2a9d99",
       },
     ],
   },
@@ -46,21 +48,29 @@ const sidebarSections = [
         id: "purchase-invoice",
         label: "Purchase invoice",
         icon: ReceiptText,
+        iconBg: "#fff0e5",
+        iconColor: "#c85500",
       },
       {
         id: "ap-invoice",
         label: "APInvoice",
         icon: BookOpenCheck,
+        iconBg: "#fef3e0",
+        iconColor: "#b86200",
       },
       {
         id: "ap-payment",
         label: "APPayment",
         icon: CreditCard,
+        iconBg: "#fdeee0",
+        iconColor: "#c96000",
       },
       {
         id: "good-receive-note",
         label: "Good Receive note",
         icon: Truck,
+        iconBg: "#f2ece5",
+        iconColor: "#7a5535",
       },
     ],
   },
@@ -72,16 +82,22 @@ const sidebarSections = [
         id: "sales-invoice",
         label: "Sales invoice",
         icon: BanknoteArrowUp,
+        iconBg: "#e6f2fe",
+        iconColor: "#1a6fd4",
       },
       {
         id: "arpayment",
         label: "ARPayment",
         icon: BadgeDollarSign,
+        iconBg: "#e3efff",
+        iconColor: "#1566c0",
       },
       {
         id: "sales-order",
         label: "Sales order",
         icon: Send,
+        iconBg: "#eaeffd",
+        iconColor: "#3870d8",
       },
     ],
   },
@@ -93,11 +109,15 @@ const sidebarSections = [
         id: "joborder-management",
         label: "Joborder (management)",
         icon: BriefcaseBusiness,
+        iconBg: "#f2e8fc",
+        iconColor: "#7c3cc0",
       },
       {
         id: "joborder-employee",
         label: "Joborder (employee)",
         icon: UserCog,
+        iconBg: "#fce8f5",
+        iconColor: "#b0388a",
       },
     ],
   },
@@ -109,11 +129,15 @@ const sidebarSections = [
         id: "cashflow-report",
         label: "Cashflow report",
         icon: Wallet,
+        iconBg: "#e5f7ea",
+        iconColor: "#189040",
       },
       {
         id: "sales-report",
         label: "Salesreport",
         icon: BarChart3,
+        iconBg: "#e3f5ef",
+        iconColor: "#1f8870",
       },
     ],
   },
@@ -250,7 +274,7 @@ export function DashboardSidebar({
               {selectedBook.label}
             </span>
             <ChevronDown
-              size={14}
+              size={15}
               strokeWidth={1.8}
               aria-hidden="true"
               className={`shrink-0 text-[#8f8983] transition-transform duration-250 ${
@@ -306,14 +330,14 @@ export function DashboardSidebar({
                       type="button"
                       className="flex h-7 items-center gap-1 rounded-[6px] border border-[#e6e6e6] bg-white px-2 text-[12px] font-medium text-[#615d59] transition-colors duration-75 hover:bg-[#f6f5f4] focus-visible:bg-[#f6f5f4] focus-visible:outline-none"
                     >
-                      <Settings size={13} strokeWidth={1.8} aria-hidden="true" />
+                      <Settings size={14} strokeWidth={1.8} aria-hidden="true" />
                       Settings
                     </button>
                     <button
                       type="button"
                       className="flex h-7 items-center gap-1 rounded-[6px] border border-[#e6e6e6] bg-white px-2 text-[12px] font-medium text-[#615d59] transition-colors duration-75 hover:bg-[#f6f5f4] focus-visible:bg-[#f6f5f4] focus-visible:outline-none"
                     >
-                      <UserPlus size={13} strokeWidth={1.8} aria-hidden="true" />
+                      <UserPlus size={14} strokeWidth={1.8} aria-hidden="true" />
                       Invite members
                     </button>
                   </div>
@@ -362,7 +386,7 @@ export function DashboardSidebar({
                         </span>
                         {isSelected ? (
                           <Check
-                            size={15}
+                            size={16}
                             strokeWidth={1.8}
                             aria-hidden="true"
                             className="shrink-0 text-[#37352f]"
@@ -376,7 +400,7 @@ export function DashboardSidebar({
                     type="button"
                     className="mt-0.5 flex h-7 w-full items-center gap-2 rounded-[6px] px-2 text-left text-[12px] font-medium text-[#0075de] outline-none transition-colors duration-75 hover:bg-[#f6f5f4] focus-visible:bg-[#f6f5f4]"
                   >
-                    <Plus size={15} strokeWidth={1.8} aria-hidden="true" />
+                    <Plus size={16} strokeWidth={1.8} aria-hidden="true" />
                     New workspace
                   </button>
                 </div>
@@ -438,7 +462,7 @@ export function DashboardSidebar({
                   }`}
                 >
                   <Icon
-                    size={17}
+                    size={18}
                     strokeWidth={1.9}
                     aria-hidden="true"
                     className="shrink-0"
@@ -456,7 +480,7 @@ export function DashboardSidebar({
               aria-label="Search"
               className="group/search relative ml-auto flex size-8 items-center justify-center rounded-full text-[#6f6a64] outline-none transition-colors duration-75 hover:bg-[#ededee] hover:text-[#2c2c2b] focus-visible:bg-[#ededee] focus-visible:ring-1 focus-visible:ring-black/5"
             >
-              <Search size={17} strokeWidth={1.9} aria-hidden="true" />
+              <Search size={18} strokeWidth={1.9} aria-hidden="true" />
               <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-[8px] bg-[#2c2c2b] px-2.5 py-1.5 text-[12px] font-medium leading-4 text-white opacity-0 shadow-[0_8px_22px_rgba(0,0,0,0.22)] transition-opacity duration-100 group-hover/search:opacity-100 group-focus-visible/search:opacity-100">
                 <span>Search</span>
                 <span className="text-[#a8a8a5]">⌃K</span>
@@ -475,7 +499,7 @@ export function DashboardSidebar({
                 className="flex h-6 w-full items-center gap-1 rounded-[7px] px-1.5 text-left text-[14px] font-medium leading-5 tracking-normal text-[#5f5e59] outline-none transition-colors duration-75 hover:bg-[#ededee] focus-visible:bg-[#ededee] focus-visible:ring-1 focus-visible:ring-black/5"
               >
                 <ChevronDown
-                  size={12}
+                  size={13}
                   strokeWidth={1.9}
                   aria-hidden="true"
                   className={`shrink-0 text-[#8f8983] transition-transform duration-150 ${
@@ -513,7 +537,7 @@ export function DashboardSidebar({
                             className="flex size-5 shrink-0 items-center justify-center rounded-[5px]"
                             style={itemIconStyle}
                           >
-                            <Icon size={15} strokeWidth={1.85} aria-hidden="true" />
+                            <Icon size={16} strokeWidth={1.85} aria-hidden="true" />
                           </span>
                         ) : (
                           <span
@@ -523,7 +547,7 @@ export function DashboardSidebar({
                                 : "text-[#6f6a64] transition-colors duration-75 group-hover:text-[#2c2c2b]"
                             }`}
                           >
-                            <Icon size={15} strokeWidth={1.85} aria-hidden="true" />
+                            <Icon size={16} strokeWidth={1.85} aria-hidden="true" />
                           </span>
                         )}
                         <span className="whitespace-nowrap">{item.label}</span>
