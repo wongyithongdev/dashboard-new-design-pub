@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   BarChart3,
   BadgeDollarSign,
@@ -22,6 +23,7 @@ import {
   UserCog,
   UserPlus,
   Wallet,
+  X,
 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
@@ -35,8 +37,6 @@ const sidebarSections = [
         id: "cashbook",
         label: "Cashbook",
         icon: Landmark,
-        iconBg: "#e0f2f0",
-        iconColor: "#2a9d99",
       },
     ],
   },
@@ -48,29 +48,21 @@ const sidebarSections = [
         id: "purchase-invoice",
         label: "Purchase invoice",
         icon: ReceiptText,
-        iconBg: "#fff0e5",
-        iconColor: "#c85500",
       },
       {
         id: "ap-invoice",
         label: "APInvoice",
         icon: BookOpenCheck,
-        iconBg: "#fef3e0",
-        iconColor: "#b86200",
       },
       {
         id: "ap-payment",
         label: "APPayment",
         icon: CreditCard,
-        iconBg: "#fdeee0",
-        iconColor: "#c96000",
       },
       {
         id: "good-receive-note",
         label: "Good Receive note",
         icon: Truck,
-        iconBg: "#f2ece5",
-        iconColor: "#7a5535",
       },
     ],
   },
@@ -82,22 +74,16 @@ const sidebarSections = [
         id: "sales-invoice",
         label: "Sales invoice",
         icon: BanknoteArrowUp,
-        iconBg: "#e6f2fe",
-        iconColor: "#1a6fd4",
       },
       {
         id: "arpayment",
         label: "ARPayment",
         icon: BadgeDollarSign,
-        iconBg: "#e3efff",
-        iconColor: "#1566c0",
       },
       {
         id: "sales-order",
         label: "Sales order",
         icon: Send,
-        iconBg: "#eaeffd",
-        iconColor: "#3870d8",
       },
     ],
   },
@@ -109,15 +95,11 @@ const sidebarSections = [
         id: "joborder-management",
         label: "Joborder (management)",
         icon: BriefcaseBusiness,
-        iconBg: "#f2e8fc",
-        iconColor: "#7c3cc0",
       },
       {
         id: "joborder-employee",
         label: "Joborder (employee)",
         icon: UserCog,
-        iconBg: "#fce8f5",
-        iconColor: "#b0388a",
       },
     ],
   },
@@ -129,15 +111,11 @@ const sidebarSections = [
         id: "cashflow-report",
         label: "Cashflow report",
         icon: Wallet,
-        iconBg: "#e5f7ea",
-        iconColor: "#189040",
       },
       {
         id: "sales-report",
         label: "Salesreport",
         icon: BarChart3,
-        iconBg: "#e3f5ef",
-        iconColor: "#1f8870",
       },
     ],
   },
@@ -160,6 +138,16 @@ const bookItems = [
 
 type SidebarItemId = (typeof sidebarSections)[number]["items"][number]["id"];
 type BookItemId = (typeof bookItems)[number]["id"];
+
+const sidebarItemHrefs: Partial<Record<SidebarItemId, string>> = {
+  "purchase-invoice": "/purchase-invoice",
+  "ap-invoice": "/apinvoice",
+  "ap-payment": "/appayment",
+  "good-receive-note": "/good-receive-note",
+  "sales-invoice": "/sales-invoice",
+  arpayment: "/arpayment",
+  "sales-order": "/sales-order",
+};
 
 function getCompanyInitials(name: string) {
   const words = name
@@ -204,8 +192,12 @@ function BrandMark({
 
 export function DashboardSidebar({
   activeItem,
+  isMobileOpen = false,
+  onMobileClose,
 }: Readonly<{
   activeItem: SidebarItemId;
+  isMobileOpen?: boolean;
+  onMobileClose?: () => void;
 }>) {
   const [isBookMenuOpen, setIsBookMenuOpen] = useState(false);
   const [activeQuickNav, setActiveQuickNav] = useState<
@@ -247,18 +239,48 @@ export function DashboardSidebar({
   }
 
   return (
-    <aside
-      className="bg-[#f7f7f8] md:h-screen md:w-[var(--dashboard-sidebar-w)] md:shrink-0 md:shadow-[inset_-1px_0_0_rgba(0,0,0,0.055)]"
-      style={{
-        fontFamily:
-          'var(--font-inter), "Inter Variable", Inter, sans-serif',
-        fontOpticalSizing: "auto",
-        fontSynthesis: "none",
-        textRendering: "optimizeLegibility",
-        WebkitFontSmoothing: "antialiased",
-      }}
-    >
-      <div className="flex h-full gap-1 overflow-x-auto px-3 py-3 md:flex-col md:gap-1 md:overflow-visible md:px-[var(--dashboard-sidebar-x)] md:py-[var(--dashboard-sidebar-y)]">
+    <>
+      <AnimatePresence>
+        {isMobileOpen ? (
+          <motion.div
+            aria-hidden="true"
+            className="fixed inset-0 z-40 bg-black/25 backdrop-blur-[1px] lg:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.22, ease: "easeOut" }}
+            onClick={onMobileClose}
+          />
+        ) : null}
+      </AnimatePresence>
+      <aside
+        className={`bg-[#f7f7f8] shadow-[inset_-1px_0_0_rgba(0,0,0,0.055)] fixed inset-y-0 left-0 z-50 w-[280px] overflow-x-hidden overflow-y-auto lg:relative lg:inset-auto lg:z-auto lg:h-screen lg:w-[var(--dashboard-sidebar-w)] lg:shrink-0 lg:overflow-hidden lg:translate-x-0 lg:shadow-[inset_-1px_0_0_rgba(0,0,0,0.055)] ${
+          shouldReduceMotion
+            ? isMobileOpen ? "translate-x-0" : "-translate-x-full"
+            : "transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] " + (isMobileOpen ? "translate-x-0" : "-translate-x-full")
+        } lg:transition-none`}
+        style={{
+          fontFamily:
+            'var(--font-inter), "Inter Variable", Inter, sans-serif',
+          fontOpticalSizing: "auto",
+          fontSynthesis: "none",
+          textRendering: "optimizeLegibility",
+          WebkitFontSmoothing: "antialiased",
+        }}
+      >
+      <div className="flex h-full flex-col gap-1 overflow-visible px-3 py-3 lg:px-[var(--dashboard-sidebar-x)] lg:py-[var(--dashboard-sidebar-y)]">
+        {/* Mobile close row */}
+        <div className="flex shrink-0 items-center justify-between px-1 pt-1 pb-2 lg:hidden">
+          <span className="text-[12px] font-semibold uppercase tracking-[0.4px] text-[#b5b0aa]">Menu</span>
+          <button
+            type="button"
+            aria-label="Close navigation"
+            onClick={onMobileClose}
+            className="flex size-7 items-center justify-center rounded-[7px] text-[#8f8983] outline-none transition-colors duration-75 hover:bg-[#ededee] hover:text-[#2c2c2b]"
+          >
+            <X size={15} strokeWidth={1.8} aria-hidden="true" />
+          </button>
+        </div>
         <div ref={bookMenuRef} className="relative hidden md:block">
           <button
             type="button"
@@ -489,55 +511,48 @@ export function DashboardSidebar({
           </div>
         </div>
 
-        <div className="flex gap-1 md:mt-5 md:flex-1 md:flex-col md:gap-3 md:overflow-y-auto">
+        <div className="flex gap-1 md:mt-4 md:flex-1 md:flex-col md:gap-5 md:overflow-y-auto">
           {sidebarSections.map((section) => (
             <div key={section.title} className="min-w-0 md:flex md:flex-col">
               <button
                 type="button"
                 aria-expanded={!collapsedSectionIds.has(section.id)}
                 onClick={() => toggleSection(section.id)}
-                className="flex h-6 w-full items-center gap-1 rounded-[7px] px-1.5 text-left text-[14px] font-medium leading-5 tracking-normal text-[#5f5e59] outline-none transition-colors duration-75 hover:bg-[#ededee] focus-visible:bg-[#ededee] focus-visible:ring-1 focus-visible:ring-black/5"
+                className="group/sec flex h-5 w-full items-center gap-1.5 px-2 text-left outline-none"
               >
                 <ChevronDown
-                  size={13}
-                  strokeWidth={1.9}
+                  size={11}
+                  strokeWidth={2.2}
                   aria-hidden="true"
-                  className={`shrink-0 text-[#8f8983] transition-transform duration-150 ${
+                  className={`shrink-0 text-[#c5c0bb] transition-transform duration-150 group-hover/sec:text-[#a39e98] ${
                     collapsedSectionIds.has(section.id) ? "-rotate-90" : ""
                   }`}
                 />
-                <span className="truncate">{section.title}</span>
+                <span className="truncate text-[11px] font-semibold uppercase tracking-[0.5px] text-[#b5b0aa] transition-colors duration-75 group-hover/sec:text-[#8a8480]">{section.title}</span>
               </button>
               {collapsedSectionIds.has(section.id) ? null : (
-                <div className="mt-1 flex gap-1 md:flex-col md:gap-0.5">
+                <div className="mt-1 flex gap-1 md:flex-col md:gap-px">
                   {section.items.map((item) => {
                     const Icon = item.icon;
                     const isActive = item.id === activeItem;
-                    const itemIconStyle =
-                      "iconBg" in item && "iconColor" in item
-                        ? {
-                            background: String(item.iconBg),
-                            color: String(item.iconColor),
-                          }
-                        : null;
+                    const itemHref = sidebarItemHrefs[item.id] ?? "#";
 
                     return (
-                      <button
+                      <Link
                         key={item.id}
-                        type="button"
+                        href={itemHref}
                         aria-current={isActive ? "page" : undefined}
-                        className={`group flex h-7 max-w-full shrink-0 items-center gap-2 rounded-[8px] px-2 text-left text-[14px] font-medium leading-5 tracking-normal outline-none transition-colors duration-75 focus-visible:bg-[#ededee] focus-visible:ring-1 focus-visible:ring-black/5 md:w-full ${
+                        className={`group flex h-7 max-w-full shrink-0 items-center gap-2 rounded-[8px] px-2 text-left text-[14px] font-medium leading-5 tracking-normal outline-none transition-colors duration-75 focus-visible:ring-1 focus-visible:ring-black/5 md:w-full ${
                           isActive
-                            ? "bg-[#e9e9ea] text-[#2c2c2b]"
-                            : "text-[#5f5e59] hover:bg-[#ededee] hover:text-[#2c2c2b]"
+                            ? "bg-[#0075de] text-white focus-visible:bg-[#0075de]"
+                            : "text-[#5f5e59] hover:bg-[#ededee] hover:text-[#2c2c2b] focus-visible:bg-[#ededee]"
                         }`}
                       >
-                        {itemIconStyle ? (
+                        {"icon" in item ? (
                           <span
-                            className="flex size-5 shrink-0 items-center justify-center rounded-[5px]"
-                            style={itemIconStyle}
+                            className={`flex size-5 shrink-0 items-center justify-center transition-colors duration-75 ${isActive ? "text-white" : "text-[#6f6a64] group-hover:text-[#2c2c2b]"}`}
                           >
-                            <Icon size={16} strokeWidth={1.85} aria-hidden="true" />
+                            <Icon size={18} strokeWidth={1.75} aria-hidden="true" />
                           </span>
                         ) : (
                           <span
@@ -551,7 +566,7 @@ export function DashboardSidebar({
                           </span>
                         )}
                         <span className="whitespace-nowrap">{item.label}</span>
-                      </button>
+                      </Link>
                     );
                   })}
                 </div>
@@ -560,6 +575,7 @@ export function DashboardSidebar({
           ))}
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }
