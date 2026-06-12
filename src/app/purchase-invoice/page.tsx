@@ -159,6 +159,8 @@ const invoiceHistory = [
   },
 ] as const;
 
+type HistoryEntry = (typeof invoiceHistory)[number];
+
 const sortOptions = [
   { key: "date", label: "Date", helper: "Newest first" },
   { key: "amount", label: "Amount", helper: "Highest first" },
@@ -173,6 +175,7 @@ type SortKey = (typeof sortOptions)[number]["key"];
 type SortDirection = "asc" | "desc";
 type StatusFilter = "all" | PurchaseInvoice["paymentStatus"];
 type ActiveTab = "invoices" | "history";
+type UploadDrawerMode = "upload" | "history";
 
 const statusOptions = [
   { key: "all", label: "All statuses", helper: "Show every invoice" },
@@ -645,234 +648,466 @@ function getFileExt(file: File) {
   return { ext, color: "#8f8983", bg: "#f6f5f4" };
 }
 
-function CreateInvoiceModal({ onClose }: Readonly<{ onClose: () => void }>) {
+function getHistoryMockFiles(historyEntry: HistoryEntry) {
+  const slug = historyEntry.supplier.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+  return [
+    {
+      name: `${slug}-invoice.pdf`,
+      size: 20284,
+      type: "application/pdf",
+    },
+    {
+      name: `${slug}-supporting-note.png`,
+      size: 90512,
+      type: "image/png",
+    },
+  ];
+}
+
+function UploadDrawer({
+  mode,
+  historyEntry,
+  onClose,
+}: Readonly<{
+  mode: UploadDrawerMode;
+  historyEntry: HistoryEntry | null;
+  onClose: () => void;
+}>) {
   const shouldReduceMotion = useReducedMotion();
+  const easeOut = [0.22, 1, 0.36, 1] as const;
+
+  const [phase, setPhase] = useState<"upload" | "processing">("upload");
   const [isDragOver, setIsDragOver] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
+  const [statuses, setStatuses] = useState<number[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const hasFiles = files.length > 0;
+  const doneCount = statuses.filter(s => s === 3).length;
+  const allDone = statuses.length > 0 && doneCount === statuses.length;
+
+  useEffect(() => { return () => { timerRef.current.forEach(clearTimeout); }; }, []);
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && (mode === "history" || phase === "upload")) onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mode, phase, onClose]);
+
+  if (mode === "history" && historyEntry) {
+    const mockFiles = getHistoryMockFiles(historyEntry);
+
+    return (
+      <div className="flex h-full flex-col">
+        <motion.div
+          key={`history-${historyEntry.taskName}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.18, ease: easeOut }}
+          className="flex h-full flex-col"
+        >
+          <div className="flex h-[var(--dashboard-header-h)] flex-shrink-0 items-center justify-between border-b border-[#e6e6e6] px-7">
+            <div className="min-w-0">
+              <h2 className="truncate text-[17px] font-semibold leading-6 tracking-[-0.15px] text-[#2c2c2b]">
+                Uploaded files
+              </h2>
+              <p className="mt-0.5 truncate text-[13px] leading-5 text-[#a39e98]">
+                {historyEntry.taskName}
+              </p>
+            </div>
+            <button type="button" onClick={onClose} className="ml-4 flex size-7 shrink-0 items-center justify-center rounded-[7px] text-[#a39e98] outline-none transition-colors duration-75 hover:bg-[#f6f5f4] hover:text-[#5f5e59]">
+              <X size={15} strokeWidth={1.8} />
+            </button>
+          </div>
+
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <div className="border-b border-[#f0efed] px-7 py-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="truncate text-[20px] font-semibold leading-7 tracking-[-0.18px] text-[#2c2c2b]">
+                    {historyEntry.supplier}
+                  </p>
+                  <p className="mt-1 text-[13px] leading-5 text-[#a39e98]">
+                    Completed import package
+                  </p>
+                </div>
+                <div className="shrink-0">
+                  <HistoryStatusPill status={historyEntry.status} />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <div className="divide-y divide-[#f4f3f1]">
+                {mockFiles.map((file, index) => {
+                  const ext = file.name.split(".").pop()?.toUpperCase() ?? "FILE";
+                  const fileMeta =
+                    file.type === "application/pdf"
+                      ? { color: "#dc2626", bg: "#fef2f2" }
+                      : { color: "#0075de", bg: "#eff6ff" };
+
+                  return (
+                    <div key={`${file.name}-${index}`} className="group flex items-center gap-3 px-7 py-3">
+                      <div className="flex size-5 shrink-0 items-center justify-center">
+                        <span className="flex size-5 items-center justify-center rounded-full bg-[#e6f4eb]">
+                          <Check size={9} strokeWidth={3} className="text-[#1a7a46]" />
+                        </span>
+                      </div>
+                      <span
+                        className="flex size-8 shrink-0 items-center justify-center rounded-[7px] text-[10px] font-bold tracking-wide"
+                        style={{ background: fileMeta.bg, color: fileMeta.color }}
+                      >
+                        {ext}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[14px] font-medium leading-5 text-[#31302e]">
+                          {file.name}
+                        </p>
+                        <p className="mt-0.5 text-[12px] leading-4 text-[#b5b0aa]">{formatBytes(file.size)}</p>
+                      </div>
+                      <button
+                        type="button"
+                        className="inline-flex h-7 shrink-0 items-center rounded-[7px] border border-transparent px-2 text-[13px] font-medium text-[#0075de] outline-none transition-colors duration-75 hover:border-[#2783DE] hover:bg-[#f7fbff] hover:text-[#0075de] focus-visible:border-[#2783DE] focus-visible:bg-[#f7fbff] focus-visible:text-[#0075de] focus-visible:ring-2 focus-visible:ring-[#2783DE]/15"
+                      >
+                        View
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="border-t border-[#e6e6e6] px-7 py-5">
+              <div className="flex items-center justify-between gap-3 text-[13px] leading-5 text-[#a39e98]">
+                <span>{mockFiles.length} files ready to review</span>
+                <span>{historyEntry.date}</span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   function addFiles(incoming: FileList | null) {
     if (!incoming) return;
     setFiles((prev) => [...prev, ...Array.from(incoming)]);
   }
-
   function removeFile(index: number) {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   }
+  function handleDragOver(e: React.DragEvent) { e.preventDefault(); setIsDragOver(true); }
+  function handleDragLeave(e: React.DragEvent) { e.preventDefault(); setIsDragOver(false); }
+  function handleDrop(e: React.DragEvent) { e.preventDefault(); setIsDragOver(false); addFiles(e.dataTransfer.files); }
 
-  function handleDragOver(e: React.DragEvent) {
-    e.preventDefault();
-    setIsDragOver(true);
-  }
-
-  function handleDragLeave(e: React.DragEvent) {
-    e.preventDefault();
-    setIsDragOver(false);
-  }
-
-  function handleDrop(e: React.DragEvent) {
-    e.preventDefault();
-    setIsDragOver(false);
-    addFiles(e.dataTransfer.files);
+  function handleUpload() {
+    timerRef.current.forEach(clearTimeout);
+    timerRef.current = [];
+    setStatuses(new Array(files.length).fill(0));
+    setPhase("processing");
+    const stagger    = shouldReduceMotion ? 15 : Math.min(300, Math.floor(2500 / Math.max(files.length, 1)));
+    const readDur    = shouldReduceMotion ? 40 : 1200;
+    const analyzeDur = shouldReduceMotion ? 40 : 1400;
+    files.forEach((_, i) => {
+      const base = i * stagger;
+      timerRef.current.push(setTimeout(() => setStatuses(p => { const n = [...p]; n[i] = 1; return n; }), base));
+      timerRef.current.push(setTimeout(() => setStatuses(p => { const n = [...p]; n[i] = 2; return n; }), base + readDur));
+      timerRef.current.push(setTimeout(() => setStatuses(p => { const n = [...p]; n[i] = 3; return n; }), base + readDur + analyzeDur));
+    });
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <motion.div
-        className="absolute inset-0 bg-black/15 backdrop-blur-[1.5px]"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: shouldReduceMotion ? 0.1 : 0.18 }}
-        onClick={onClose}
-      />
+    <div className="flex h-full flex-col">
+        <AnimatePresence mode="wait">
+          {phase === "upload" ? (
+            <motion.div key="upload" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15, ease: easeOut }} className="flex h-full flex-col">
+              <div className="flex h-[var(--dashboard-header-h)] flex-shrink-0 items-center justify-between border-b border-[#e6e6e6] px-7">
+                <div>
+                  <h2 className="text-[17px] font-semibold leading-6 tracking-[-0.15px] text-[#2c2c2b]">Upload invoices</h2>
+                </div>
+                <button type="button" onClick={onClose} className="ml-4 flex size-7 shrink-0 items-center justify-center rounded-[7px] text-[#a39e98] outline-none transition-colors duration-75 hover:bg-[#f6f5f4] hover:text-[#5f5e59]">
+                  <X size={15} strokeWidth={1.8} />
+                </button>
+              </div>
+              <div
+                className={`relative flex-1 cursor-pointer overflow-y-auto px-7 py-6 transition-colors duration-150 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${isDragOver ? "bg-[#f4f9ff]" : "bg-white"}`}
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                {/* Drag-over overlay ring */}
+                {/* Empty state: dot grid + glow + ghost invoice */}
+                {!hasFiles && (
+                  <div className="pointer-events-none absolute inset-0 select-none overflow-hidden flex flex-col items-center justify-center">
+                    {/* Dot grid texture */}
+                    <div className="absolute inset-0 opacity-[0.55]" style={{ backgroundImage: "radial-gradient(circle, #ccc8c2 1px, transparent 1px)", backgroundSize: "18px 18px" }} />
 
-      <motion.div
-        className="relative z-10 w-full max-w-[460px] rounded-[16px] border border-[#e6e6e6] bg-white shadow-[0_0.175px_1px_rgba(0,0,0,0.01),_0_0.8px_2.9px_rgba(0,0,0,0.02),_0_2px_7.8px_rgba(0,0,0,0.027),_0_4px_18px_rgba(0,0,0,0.04),_0_16px_40px_rgba(0,0,0,0.05)]"
-        initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: 6 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.98, y: 3 }}
-        transition={{ duration: shouldReduceMotion ? 0.14 : 0.22, ease: [0.16, 1, 0.3, 1] }}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#e6e6e6] px-5 py-[13px]">
-          <h2 className="text-[14px] font-semibold leading-5 tracking-[-0.05px] text-[#2c2c2b]">
-            Upload invoice
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex size-7 items-center justify-center rounded-[7px] text-[#a39e98] outline-none transition-colors duration-75 hover:bg-[#f6f5f4] hover:text-[#5f5e59]"
-          >
-            <X size={14} strokeWidth={1.8} />
-          </button>
-        </div>
-
-        <div className="px-5 pt-5 pb-4 space-y-3">
-          {/* Drop zone */}
-          <motion.button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            animate={isDragOver ? { scale: 1.015 } : { scale: 1 }}
-            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className={`flex w-full flex-col items-center rounded-[10px] border border-dashed outline-none transition-colors duration-150 ${
-              hasFiles ? "py-5" : "py-12"
-            } ${
-              isDragOver
-                ? "border-[#0075de] bg-[#f0f7ff]"
-                : "border-[#c9c4be] bg-transparent hover:border-[#a39e98]"
-            }`}
-          >
-            <motion.div
-              className="flex size-11 items-center justify-center rounded-[12px]"
-              animate={
-                isDragOver
-                  ? { scale: 1.12, backgroundColor: "#dbeeff" }
-                  : { scale: 1, backgroundColor: "#eff6ff" }
-              }
-              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
-                <motion.line
-                  x1="12" y1="15" x2="12" y2="5"
-                  stroke="#0075de" strokeWidth="1.75" strokeLinecap="round"
-                  animate={isDragOver && !shouldReduceMotion ? { y: [0, -2, 0] } : { y: 0 }}
-                  transition={{ duration: 0.55, repeat: isDragOver ? Infinity : 0, ease: "easeInOut" }}
-                />
-                <motion.path
-                  d="M8 9 L12 5 L16 9" fill="none"
-                  stroke="#0075de" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"
-                  animate={isDragOver && !shouldReduceMotion ? { y: [0, -2, 0] } : { y: 0 }}
-                  transition={{ duration: 0.55, repeat: isDragOver ? Infinity : 0, ease: "easeInOut" }}
-                />
-                <line x1="5" y1="18" x2="19" y2="18" stroke="#0075de" strokeWidth="1.75" strokeLinecap="round" />
-              </svg>
-            </motion.div>
-            <p className={`mt-2.5 text-[13px] font-medium transition-colors duration-150 ${isDragOver ? "text-[#0075de]" : "text-[#2c2c2b]"}`}>
-              {isDragOver ? "Release to add" : hasFiles ? "Drop more files" : "Drop your invoice here"}
-            </p>
-            {!hasFiles && (
-              <p className="mt-0.5 text-[12px] text-[#a39e98]">PDF, JPG, PNG — up to 20 MB</p>
-            )}
-          </motion.button>
-
-          {/* File list — scrollable when overflows */}
-          {hasFiles && (
-            <div className="max-h-[204px] overflow-y-auto flex flex-col gap-2 pr-0.5">
-              <AnimatePresence initial={false}>
-                {files.map((file, index) => {
-                  const { ext, color, bg } = getFileExt(file);
-                  return (
+                    {/* Ambient glow */}
                     <motion.div
-                      key={`${file.name}-${file.size}-${index}`}
-                      layout
-                      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.96 }}
-                      transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                      className="flex items-center gap-3 rounded-[8px] border border-[#e6e6e6] bg-white px-3 py-2.5"
-                    >
-                      <span
-                        className="flex size-8 shrink-0 items-center justify-center rounded-[7px] text-[10px] font-bold tracking-wide"
-                        style={{ background: bg, color }}
-                      >
-                        {ext}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <p className="truncate text-[13px] font-medium leading-5 text-[#2c2c2b]">
-                          {file.name}
-                        </p>
-                        <p className="text-[11px] leading-4 text-[#a39e98]">
-                          {formatBytes(file.size)}
-                        </p>
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => removeFile(index)}
-                        className="flex size-6 shrink-0 items-center justify-center rounded-[6px] text-[#c9c4be] outline-none transition-colors duration-75 hover:bg-[#f6f5f4] hover:text-[#5f5e59]"
-                      >
-                        <X size={12} strokeWidth={2} />
+                      className="absolute inset-0"
+                      animate={{ opacity: isDragOver ? 1 : 0.7 }}
+                      transition={{ duration: 0.4, ease: easeOut }}
+                      style={{ background: "radial-gradient(ellipse 80% 60% at 50% 46%, rgba(0,117,222,0.11) 0%, transparent 70%)" }}
+                    />
+
+                    {/* Cards + text centered as one unit */}
+                    <div className="relative flex flex-col items-center">
+                      {/* Card stack */}
+                      <div className="relative h-[148px] w-[180px]">
+
+                        {/* Back card */}
+                        <motion.div
+                          className="absolute inset-0"
+                          animate={isDragOver && !shouldReduceMotion
+                            ? { rotate: -8, x: -26, y: -8, scale: 1.02 }
+                            : shouldReduceMotion
+                              ? { rotate: -5, x: -16, y: 0 }
+                              : { rotate: [-5, -6, -5], x: [-16, -18, -16], y: [0, -3, 0] }
+                          }
+                          transition={isDragOver
+                            ? { duration: 0.38, ease: easeOut }
+                            : { duration: 4, repeat: Infinity, ease: "easeInOut" }
+                          }
+                        >
+                          <div className="w-[168px] rounded-[10px] border border-[#e8e5df] bg-white/60 p-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.05)] opacity-50">
+                            <div className="mb-2 h-2 w-20 rounded-full bg-[#e0dcd5]" />
+                            <div className="mb-1 h-1.5 w-14 rounded-full bg-[#eae7e1]" />
+                            <div className="mb-3 h-1.5 w-10 rounded-full bg-[#eae7e1]" />
+                            <div className="mb-2.5 h-px bg-[#f0ede8]" />
+                            {[44, 32, 52].map((w, i) => (
+                              <div key={i} className="mb-1.5 flex justify-between">
+                                <div className="h-1.5 rounded-full bg-[#ebe8e2]" style={{ width: w }} />
+                                <div className="h-1.5 w-8 rounded-full bg-[#ebe8e2]" />
+                              </div>
+                            ))}
+                            <div className="mt-2.5 flex justify-end"><div className="h-2 w-16 rounded-full bg-[#dedad3]" /></div>
+                          </div>
+                        </motion.div>
+
+                        {/* Front card */}
+                        <motion.div
+                          className="absolute inset-0"
+                          animate={isDragOver && !shouldReduceMotion
+                            ? { rotate: 7, x: 24, y: -10, scale: 1.04 }
+                            : shouldReduceMotion
+                              ? { rotate: 4, x: 14, y: 0 }
+                              : { rotate: [4, 5, 4], x: [14, 16, 14], y: [0, -4, 0] }
+                          }
+                          transition={isDragOver
+                            ? { duration: 0.38, ease: easeOut }
+                            : { duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.4 }
+                          }
+                        >
+                          <div className="w-[168px] rounded-[10px] border border-[#e0ddd6] bg-white/85 p-3.5 shadow-[0_4px_16px_rgba(0,0,0,0.09)]">
+                            <div className="mb-1 flex items-center justify-between">
+                              <div className="h-2 w-16 rounded-full bg-[#d8d4cd]" />
+                              <div className="h-1.5 w-10 rounded-full bg-[#e5e1da]" />
+                            </div>
+                            <div className="mb-3 h-1.5 w-12 rounded-full bg-[#eae7e1]" />
+                            <div className="mb-2.5 h-[14px] w-20 rounded-[5px] bg-[#d4d0c8]" />
+                            <div className="mb-2.5 h-px bg-[#eeebe5]" />
+                            {[56, 40, 64, 36].map((w, i) => (
+                              <div key={i} className="mb-1.5 flex justify-between">
+                                <div className="h-1.5 rounded-full bg-[#e5e1da]" style={{ width: w }} />
+                                <div className="h-1.5 w-9 rounded-full bg-[#e5e1da]" />
+                              </div>
+                            ))}
+                          </div>
+                        </motion.div>
+
+                        {/* Sparkle */}
+                        <motion.span
+                          className="absolute -right-1 -top-2 text-[#62aef0]"
+                          animate={shouldReduceMotion ? { opacity: 0.7 } : { opacity: [0.3, 1, 0.3], scale: [0.88, 1.15, 0.88] }}
+                          transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                        >
+                          <Sparkles size={15} strokeWidth={1.8} />
+                        </motion.span>
+                      </div>
+
+                      {/* Text below cards */}
+                      <div className="mt-5 flex flex-col items-center">
+                        <motion.p
+                          className="text-[14px] font-semibold tracking-[-0.1px]"
+                          animate={{ color: isDragOver ? "#0075de" : "#2c2b29" }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {isDragOver ? "Release to add" : "Drop invoices here"}
+                        </motion.p>
+                        <p className="mt-1 text-[12px] text-[#b5b0aa]">PDF, JPG, PNG · AI extracts supplier, amount &amp; date</p>
+                      </div>
+                    </div>
+
+                    {/* Drag-over ring */}
+                    <AnimatePresence>
+                      {isDragOver && (
+                        <motion.div
+                          className="pointer-events-none absolute inset-3 rounded-[12px] border-2 border-dashed border-[#0075de]/50"
+                          initial={{ opacity: 0, scale: 0.97 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.97 }}
+                          transition={{ duration: 0.2, ease: easeOut }}
+                        />
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
+
+                <AnimatePresence>
+                  {hasFiles && (
+                    <motion.div key="filelist" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.12, ease: easeOut } }} className="mt-4 flex flex-col gap-2">
+                      <AnimatePresence initial={false}>
+                        {files.map((file, index) => {
+                          const fileExt = getFileExt(file);
+                          return (
+                            <motion.div
+                              key={`${file.name}-${file.size}-${index}`}
+                              layout
+                              initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 6, scale: 0.98 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.96 }}
+                              transition={{ duration: 0.2, ease: easeOut }}
+                              className="flex items-center gap-3 rounded-[10px] border border-[#e6e6e6] bg-white px-3 py-2.5"
+                            >
+                              <span className="flex size-8 shrink-0 items-center justify-center rounded-[7px] text-[10px] font-bold tracking-wide" style={{ background: fileExt.bg, color: fileExt.color }}>{fileExt.ext}</span>
+                              <span className="min-w-0 flex-1">
+                                <p className="truncate text-[13px] font-medium leading-5 text-[#31302e]">{file.name}</p>
+                                <p className="flex items-center gap-1 text-[11px] leading-4 text-[#a39e98]">
+                                  <span className="size-[5px] rounded-full bg-[#1aae39]" />
+                                  Ready &middot; {formatBytes(file.size)}
+                                </p>
+                              </span>
+                              <button type="button" onClick={e => { e.stopPropagation(); removeFile(index); }} className="flex size-6 shrink-0 items-center justify-center rounded-[6px] text-[#c9c4be] outline-none transition-colors duration-75 hover:bg-[#f6f5f4] hover:text-[#5f5e59]">
+                                <X size={12} strokeWidth={2} />
+                              </button>
+                            </motion.div>
+                          );
+                        })}
+                      </AnimatePresence>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              <div className="border-t border-[#e6e6e6] px-7 py-5">
+                <AnimatePresence mode="wait">
+                  {hasFiles ? (
+                    <motion.button key="extract" type="button" onClick={handleUpload} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15, ease: easeOut }} className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-[10px] bg-[#0075de] px-4 text-[14px] font-medium text-white shadow-[0_1px_2px_rgba(0,117,222,0.22),_0_0_0_1px_rgba(0,117,222,0.12)] outline-none transition-all duration-75 hover:bg-[#005bab] active:scale-[0.99]">
+                      <Sparkles size={14} strokeWidth={1.8} aria-hidden="true" />
+                      {`Extract ${files.length} ${files.length === 1 ? "invoice" : "invoices"} with AI`}
+                    </motion.button>
+                  ) : (
+                    <motion.div key="sources" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15, ease: easeOut }} className="flex gap-2">
+                      <button type="button" onClick={() => cameraInputRef.current?.click()} className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-[10px] bg-[#2783DE] text-[13px] font-medium text-white shadow-[0_1px_1px_rgba(39,131,222,0.16)] outline-none transition-colors duration-75 hover:bg-[#1f76c9]">
+                        <Camera size={14} strokeWidth={1.8} />
+                        Take photo
+                      </button>
+                      <button type="button" onClick={() => fileInputRef.current?.click()} className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-[10px] bg-[#2783DE] text-[13px] font-medium text-white shadow-[0_1px_1px_rgba(39,131,222,0.16)] outline-none transition-colors duration-75 hover:bg-[#1f76c9]">
+                        <FolderOpen size={14} strokeWidth={1.8} />
+                        Choose file
                       </button>
                     </motion.div>
-                  );
-                })}
-              </AnimatePresence>
-            </div>
-          )}
-        </div>
-
-        {/* Hidden file inputs */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept=".pdf,.jpg,.jpeg,.png"
-          className="hidden"
-          onChange={(e) => addFiles(e.target.files)}
-        />
-        <input
-          ref={cameraInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          onChange={(e) => addFiles(e.target.files)}
-        />
-
-        {/* Divider */}
-        <div className="flex items-center gap-3 px-5 pb-4">
-          <div className="h-px flex-1 bg-[#e6e6e6]" />
-          <span className="text-[12px] text-[#c9c4be]">or</span>
-          <div className="h-px flex-1 bg-[#e6e6e6]" />
-        </div>
-
-        {/* Buttons */}
-        <div className="flex items-center gap-2 px-5 pb-5">
-          {hasFiles ? (
-            <>
-              <button
-                type="button"
-                onClick={() => cameraInputRef.current?.click()}
-                className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-[8px] border border-[#e6e6e6] bg-white px-4 text-[14px] font-medium text-[#2c2c2b] shadow-[0_1px_2px_rgba(0,0,0,0.05)] outline-none transition-colors duration-75 hover:bg-[#f6f5f4]"
-              >
-                <Camera size={14} strokeWidth={1.8} aria-hidden="true" className="text-[#8f8983]" />
-                Take photo
-              </button>
-              <button
-                type="button"
-                className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-[8px] bg-[#0075de] px-4 text-[14px] font-medium text-white shadow-[0_1px_2px_rgba(0,117,222,0.22),_0_0_0_1px_rgba(0,117,222,0.12)] outline-none transition-colors duration-75 hover:bg-[#005bab]"
-              >
-                Upload {files.length} {files.length === 1 ? "file" : "files"}
-              </button>
-            </>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
           ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => cameraInputRef.current?.click()}
-                className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-[8px] bg-[#0075de] px-4 text-[14px] font-medium text-white shadow-[0_1px_2px_rgba(0,117,222,0.22),_0_0_0_1px_rgba(0,117,222,0.12)] outline-none transition-colors duration-75 hover:bg-[#005bab]"
-              >
-                <Camera size={14} strokeWidth={1.8} aria-hidden="true" />
-                Take a photo
-              </button>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-[8px] border border-[#e6e6e6] bg-white px-4 text-[14px] font-medium text-[#2c2c2b] shadow-[0_1px_2px_rgba(0,0,0,0.05)] outline-none transition-colors duration-75 hover:bg-[#f6f5f4]"
-              >
-                <FolderOpen size={14} strokeWidth={1.8} aria-hidden="true" className="text-[#8f8983]" />
-                Choose file
-              </button>
-            </>
+            <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2, ease: easeOut }} className="flex h-full flex-col">
+              <div className="flex h-[var(--dashboard-header-h)] flex-shrink-0 items-center justify-between border-b border-[#e6e6e6] px-7">
+                <div className="flex min-w-0 items-center gap-3">
+                  <AnimatePresence mode="wait">
+                    {allDone ? (
+                      <motion.span key="ok" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.22, ease: easeOut }} className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#e9f7ef]">
+                        <Check size={16} strokeWidth={2.5} className="text-[#1f7a4d]" />
+                      </motion.span>
+                    ) : (
+                      <motion.span key="spin" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#f0f7ff]">
+                        <span className="size-[17px] animate-spin rounded-full border-2 border-[#0075de]/15 border-t-[#0075de]" />
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                  <div className="min-w-0">
+                    <AnimatePresence mode="wait">
+                      {allDone ? (
+                        <motion.h2 key="done-h" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[17px] font-semibold leading-6 tracking-[-0.15px] text-[#1f7a4d]">
+                          {files.length} {files.length === 1 ? "invoice" : "invoices"} ready
+                        </motion.h2>
+                      ) : (
+                        <motion.h2 key="proc-h" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-[17px] font-semibold leading-6 tracking-[-0.15px] text-[#2c2c2b]">
+                          Extracting invoices
+                        </motion.h2>
+                      )}
+                    </AnimatePresence>
+                    <p className="mt-0.5 text-[13px] leading-5 text-[#a39e98]">
+                      {`${doneCount} of ${files.length} done`}
+                    </p>
+                  </div>
+                </div>
+                <button type="button" onClick={onClose} className="ml-4 flex size-7 shrink-0 items-center justify-center rounded-[7px] text-[#a39e98] outline-none transition-colors duration-75 hover:bg-[#f6f5f4] hover:text-[#5f5e59]">
+                  <X size={15} strokeWidth={1.8} />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <div className="divide-y divide-[#f4f3f1]">
+                  {files.map((file, i) => {
+                    const s = statuses[i] ?? 0;
+                    const done   = s === 3;
+                    const active = s === 1 || s === 2;
+                    return (
+                      <div key={i} className="group flex items-center gap-3 px-7 py-3">
+                        {/* Status indicator */}
+                        <div className="flex size-5 shrink-0 items-center justify-center">
+                          {done ? (
+                            <span className="flex size-5 items-center justify-center rounded-full bg-[#e6f4eb]">
+                              <Check size={9} strokeWidth={3} className="text-[#1a7a46]" />
+                            </span>
+                          ) : active ? (
+                            <span className="size-[14px] animate-spin rounded-full border-[1.5px] border-[#0075de]/20 border-t-[#0075de]" />
+                          ) : (
+                            <span className="size-[7px] rounded-full bg-[#dedad5]" />
+                          )}
+                        </div>
+
+                        {/* Single-line: name · size */}
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-[14px] font-medium leading-5 text-[#31302e]">
+                            {file.name}
+                          </p>
+                          <p className="mt-0.5 text-[12px] leading-4 text-[#b5b0aa]">{formatBytes(file.size)}</p>
+                        </div>
+
+                        {/* View — always visible when done */}
+                        {done && (
+                          <button
+                            type="button"
+                            className="inline-flex h-7 shrink-0 items-center rounded-[7px] border border-transparent px-2 text-[13px] font-medium text-[#0075de] outline-none transition-colors duration-75 hover:border-[#2783DE] hover:bg-[#f7fbff] hover:text-[#0075de] focus-visible:border-[#2783DE] focus-visible:bg-[#f7fbff] focus-visible:text-[#0075de] focus-visible:ring-2 focus-visible:ring-[#2783DE]/15"
+                          >
+                            View
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              {!allDone && (
+                <div className="border-t border-[#e6e6e6] px-7 py-5">
+                  <div className="flex items-center justify-center gap-2 text-[13px] text-[#a39e98]">
+                    <span className="size-[13px] animate-spin rounded-full border-[1.5px] border-[#0075de]/15 border-t-[#0075de]" />
+                    AI is reading your invoices…
+                  </div>
+                </div>
+              )}
+            </motion.div>
           )}
-        </div>
-      </motion.div>
+        </AnimatePresence>
+        <input ref={fileInputRef} type="file" multiple accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={e => addFiles(e.target.files)} />
+        <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => addFiles(e.target.files)} />
     </div>
   );
 }
@@ -880,7 +1115,9 @@ function CreateInvoiceModal({ onClose }: Readonly<{ onClose: () => void }>) {
 export default function PurchaseInvoicePage() {
   const [activeTab, setActiveTab] = useState<ActiveTab>("invoices");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isUploadDrawerOpen, setIsUploadDrawerOpen] = useState(false);
+  const [uploadDrawerMode, setUploadDrawerMode] = useState<UploadDrawerMode>("upload");
+  const [selectedHistoryEntry, setSelectedHistoryEntry] = useState<HistoryEntry | null>(null);
   const [viewingInvoice, setViewingInvoice] = useState<(typeof purchaseInvoices)[number] | null>(null);
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
   const [isStatusMenuOpen, setIsStatusMenuOpen] = useState(false);
@@ -942,6 +1179,24 @@ export default function PurchaseInvoicePage() {
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, []);
 
+  function closeUploadDrawer() {
+    setIsUploadDrawerOpen(false);
+    setUploadDrawerMode("upload");
+    setSelectedHistoryEntry(null);
+  }
+
+  function openUploadDrawer() {
+    setUploadDrawerMode("upload");
+    setSelectedHistoryEntry(null);
+    setIsUploadDrawerOpen(true);
+  }
+
+  function openHistoryDrawer(historyEntry: HistoryEntry) {
+    setUploadDrawerMode("history");
+    setSelectedHistoryEntry(historyEntry);
+    setIsUploadDrawerOpen(true);
+  }
+
   return (
     <div className="dashboard-shell min-h-screen bg-white md:flex">
       <DashboardSidebar
@@ -950,7 +1205,8 @@ export default function PurchaseInvoicePage() {
         onMobileClose={() => setIsSidebarOpen(false)}
       />
 
-      <main className="min-h-[calc(100vh-64px)] min-w-0 flex-1 bg-white text-[#2c2c2b] md:min-h-screen">
+      <div className="flex min-w-0 flex-1 overflow-hidden">
+      <main className="min-w-0 flex-1 overflow-y-auto bg-white text-[#2c2c2b]">
         <section className="flex min-h-screen flex-col">
           <header className="flex h-[var(--dashboard-header-h)] items-center justify-between border-b border-[#e6e6e6] px-[var(--dashboard-main-x)]">
             <div className="flex min-w-0 items-center gap-2">
@@ -1021,11 +1277,15 @@ export default function PurchaseInvoicePage() {
             </div>
             <button
               type="button"
-              onClick={() => setIsCreateModalOpen(true)}
-              className="inline-flex h-7 items-center gap-1.5 rounded-[7px] bg-[#2783DE] px-2.5 text-[13px] font-medium leading-5 text-white shadow-[0_1px_1px_rgba(39,131,222,0.16)] outline-none transition-colors duration-75 hover:bg-[#1f76c9]"
+              onClick={() => (isUploadDrawerOpen ? closeUploadDrawer() : openUploadDrawer())}
+              className={`inline-flex h-7 items-center gap-1.5 rounded-[7px] px-2.5 text-[13px] font-medium leading-5 outline-none transition-colors duration-75 ${isUploadDrawerOpen ? "bg-[#e8453c] text-white shadow-[0_1px_1px_rgba(232,69,60,0.18)] hover:bg-[#d63c34]" : "bg-[#2783DE] text-white shadow-[0_1px_1px_rgba(39,131,222,0.16)] hover:bg-[#1f76c9]"}`}
             >
-              <Plus size={13} strokeWidth={1.9} aria-hidden="true" />
-              Create invoice
+              {isUploadDrawerOpen ? (
+                <X size={13} strokeWidth={2} aria-hidden="true" />
+              ) : (
+                <Plus size={13} strokeWidth={1.9} aria-hidden="true" />
+              )}
+              {isUploadDrawerOpen ? "Dismiss" : "Create invoice"}
             </button>
           </div>
           <div className="mx-[var(--dashboard-main-x)] border-b border-[#e6e6e6]" />
@@ -1455,6 +1715,7 @@ export default function PurchaseInvoicePage() {
                         <div className="inline-flex items-center gap-1">
                           <button
                             type="button"
+                            onClick={() => openHistoryDrawer(history)}
                             className="inline-flex h-7 items-center rounded-[7px] border border-transparent px-2 text-[14px] font-medium leading-5 text-[#0075de] outline-none transition-colors duration-75 hover:border-[#2783DE] hover:bg-[#f7fbff] focus-visible:border-[#2783DE] focus-visible:bg-[#f7fbff] focus-visible:ring-2 focus-visible:ring-[#2783DE]/15"
                           >
                             View
@@ -1471,10 +1732,28 @@ export default function PurchaseInvoicePage() {
       </main>
 
       <AnimatePresence>
-        {isCreateModalOpen ? (
-          <CreateInvoiceModal onClose={() => setIsCreateModalOpen(false)} />
-        ) : null}
+        {isUploadDrawerOpen && (
+          <motion.aside
+            key="upload-aside"
+            className="relative flex-shrink-0 overflow-hidden border-l border-[#e6e6e6] bg-white"
+            style={{ height: "100vh", position: "sticky", top: 0 }}
+            initial={{ width: 0 }}
+            animate={{ width: 440 }}
+            exit={{ width: 0 }}
+            transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className="flex h-full w-[440px] flex-col">
+              <UploadDrawer
+                mode={uploadDrawerMode}
+                historyEntry={selectedHistoryEntry}
+                onClose={closeUploadDrawer}
+              />
+            </div>
+          </motion.aside>
+        )}
       </AnimatePresence>
+
+      </div>
 
       <AnimatePresence>
         {viewingInvoice ? (
