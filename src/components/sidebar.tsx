@@ -244,7 +244,7 @@ export function DashboardSidebar({
         {isMobileOpen ? (
           <motion.div
             aria-hidden="true"
-            className="fixed inset-0 z-40 bg-black/25 backdrop-blur-[1px] lg:hidden"
+            className="fixed inset-0 z-40 bg-black/25 backdrop-blur-[1px] xl:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -254,11 +254,11 @@ export function DashboardSidebar({
         ) : null}
       </AnimatePresence>
       <aside
-        className={`bg-[#f7f7f8] shadow-[inset_-1px_0_0_rgba(0,0,0,0.055)] fixed inset-y-0 left-0 z-50 w-[280px] overflow-x-hidden overflow-y-auto lg:relative lg:inset-auto lg:z-auto lg:h-screen lg:w-[var(--dashboard-sidebar-w)] lg:shrink-0 lg:overflow-hidden lg:translate-x-0 lg:shadow-[inset_-1px_0_0_rgba(0,0,0,0.055)] ${
+        className={`bg-[#f7f7f8] shadow-[inset_-1px_0_0_rgba(0,0,0,0.055)] fixed inset-y-0 left-0 z-50 w-[280px] overflow-x-hidden overflow-y-auto xl:relative xl:inset-auto xl:z-auto xl:h-screen xl:w-[var(--dashboard-sidebar-w)] xl:shrink-0 xl:overflow-hidden xl:translate-x-0 xl:shadow-[inset_-1px_0_0_rgba(0,0,0,0.055)] ${
           shouldReduceMotion
             ? isMobileOpen ? "translate-x-0" : "-translate-x-full"
             : "transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] " + (isMobileOpen ? "translate-x-0" : "-translate-x-full")
-        } lg:transition-none`}
+        } xl:transition-none`}
         style={{
           fontFamily:
             'var(--font-inter), "Inter Variable", Inter, sans-serif',
@@ -270,7 +270,7 @@ export function DashboardSidebar({
       >
       <div className="flex h-full flex-col gap-1 overflow-visible px-3 py-3 lg:px-[var(--dashboard-sidebar-x)] lg:py-[var(--dashboard-sidebar-y)]">
         {/* Mobile close row */}
-        <div className="flex shrink-0 items-center justify-between px-1 pt-1 pb-2 lg:hidden">
+        <div className="flex shrink-0 items-center justify-between px-1 pt-1 pb-2 xl:hidden">
           <span className="text-[12px] font-semibold uppercase tracking-[0.4px] text-[#b5b0aa]">Menu</span>
           <button
             type="button"

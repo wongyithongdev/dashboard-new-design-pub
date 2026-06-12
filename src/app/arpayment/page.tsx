@@ -585,7 +585,7 @@ export default function ARPaymentPage() {
                 type="button"
                 aria-label="Open navigation"
                 onClick={() => setIsSidebarOpen(true)}
-                className="flex size-7 shrink-0 items-center justify-center rounded-[7px] text-[#6f6a64] outline-none transition-colors duration-75 hover:bg-[#ededee] hover:text-[#2c2c2b] lg:hidden"
+                className="flex size-7 shrink-0 items-center justify-center rounded-[7px] text-[#6f6a64] outline-none transition-colors duration-75 hover:bg-[#ededee] hover:text-[#2c2c2b] xl:hidden"
               >
                 <Menu size={18} strokeWidth={1.8} aria-hidden="true" />
               </button>

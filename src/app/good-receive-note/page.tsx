@@ -715,7 +715,7 @@ export default function GoodReceiveNotePage() {
                   type="button"
                   onClick={() => setIsSidebarOpen(true)}
                   aria-label="Open navigation menu"
-                  className="inline-flex size-8 shrink-0 items-center justify-center rounded-[8px] text-[#615d59] outline-none transition-colors duration-75 hover:bg-[#f7f7f8] hover:text-[#2c2c2b] focus-visible:bg-[#f7f7f8] focus-visible:text-[#2c2c2b] lg:hidden"
+                  className="inline-flex size-8 shrink-0 items-center justify-center rounded-[8px] text-[#615d59] outline-none transition-colors duration-75 hover:bg-[#f7f7f8] hover:text-[#2c2c2b] focus-visible:bg-[#f7f7f8] focus-visible:text-[#2c2c2b] xl:hidden"
                 >
                   <Menu size={17} strokeWidth={1.9} aria-hidden="true" />
                 </button>

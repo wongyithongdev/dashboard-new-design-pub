@@ -356,7 +356,7 @@ export default function SalesOrderPage() {
                   type="button"
                   aria-label="Open sidebar"
                   onClick={() => setIsSidebarOpen(true)}
-                  className="inline-flex size-8 items-center justify-center rounded-[8px] border border-[#e6e6e6] bg-white text-[#615d59] outline-none transition-colors duration-100 hover:bg-[#f7f7f8] hover:text-[#2c2c2b] focus-visible:ring-1 focus-visible:ring-black/5 lg:hidden"
+                  className="flex size-7 shrink-0 items-center justify-center rounded-[7px] text-[#6f6a64] outline-none transition-colors duration-75 hover:bg-[#ededee] hover:text-[#2c2c2b] xl:hidden"
                 >
                   <Menu size={16} strokeWidth={1.9} aria-hidden="true" />
                 </button>
