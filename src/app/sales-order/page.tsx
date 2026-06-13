@@ -16,6 +16,7 @@ import {
   FolderOpen,
   Hash,
   Info,
+  Layers,
   ListFilter,
   Menu,
   Megaphone,
@@ -58,12 +59,12 @@ const salesOrders: SalesOrder[] = [
 ];
 
 const salesOrderHistory = [
-  { taskName: "Created sales order", date: "09 Jun 2026 10:24:18", customer: "Vertex Retail Sdn Bhd", status: "Completed" },
-  { taskName: "Reviewed customer request", date: "09 Jun 2026 09:48:32", customer: "BluePeak Foods", status: "Completed" },
-  { taskName: "Matched delivery schedule", date: "08 Jun 2026 04:16:09", customer: "Northstar Cafe Group", status: "Processing" },
-  { taskName: "Checked stock allocation", date: "08 Jun 2026 02:39:51", customer: "Brightline Studio", status: "Pending" },
-  { taskName: "Synced order details", date: "07 Jun 2026 11:02:44", customer: "Greenfield Packaging", status: "Completed" },
-  { taskName: "Flagged pricing exception", date: "07 Jun 2026 09:15:27", customer: "Apex Office Systems", status: "Failed" },
+  { taskName: "Created sales order", date: "09 Jun 2026 10:24:18", customer: "Vertex Retail Sdn Bhd", status: "Completed", type: "Single" },
+  { taskName: "Reviewed customer request", date: "09 Jun 2026 09:48:32", customer: "BluePeak Foods", status: "Completed", type: "Batch" },
+  { taskName: "Matched delivery schedule", date: "08 Jun 2026 04:16:09", customer: "Northstar Cafe Group", status: "Processing", type: "Single" },
+  { taskName: "Checked stock allocation", date: "08 Jun 2026 02:39:51", customer: "Brightline Studio", status: "Pending", type: "Batch" },
+  { taskName: "Synced order details", date: "07 Jun 2026 11:02:44", customer: "Greenfield Packaging", status: "Completed", type: "Batch" },
+  { taskName: "Flagged pricing exception", date: "07 Jun 2026 09:15:27", customer: "Apex Office Systems", status: "Failed", type: "Single" },
 ] as const;
 
 const sortOptions = [
@@ -219,6 +220,23 @@ function AmountPill({ amount }: Readonly<{ amount: string }>) {
       className={`inline-flex h-6 items-center whitespace-nowrap rounded-[6px] px-2 text-[14px] font-medium leading-5 tabular-nums max-xl:px-1.5 max-xl:text-[12px] ${amountStyle}`}
     >
       {amount}
+    </span>
+  );
+}
+
+function TypeBadge({ type }: Readonly<{ type: string }>) {
+  if (type === "Batch") {
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1 rounded-[5px] bg-[#f3f0ff] px-1.5 py-0.5 text-[12px] font-medium leading-4 text-[#7c3aed]">
+        <Layers size={11} strokeWidth={2} className="shrink-0" />
+        Batch
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-[5px] bg-[#f1f0ee] px-1.5 py-0.5 text-[12px] font-medium leading-4 text-[#5f5e59]">
+      <FileText size={11} strokeWidth={2} className="shrink-0" />
+      Single
     </span>
   );
 }
@@ -1048,7 +1066,10 @@ export default function SalesOrderPage() {
                         }}
                       >
                         <td className="border-b border-r border-[#f0efed] pl-4 pr-3 text-[14px] font-medium leading-5 text-[#31302e]">
-                          <span className="block truncate">{entry.taskName}</span>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="truncate">{entry.taskName}</span>
+                            <TypeBadge type={entry.type} />
+                          </div>
                         </td>
                         <td className="border-b border-r border-[#f0efed] px-3 text-[14px] font-normal leading-5 text-[#5f5e59]">
                           <DateCell date={entry.date} />

@@ -18,6 +18,7 @@ import {
   FolderOpen,
   Hash,
   Info,
+  Layers,
   ListFilter,
   Megaphone,
   Menu,
@@ -126,36 +127,42 @@ const invoiceHistory = [
     date: "09 Jun 2026 10:24:18",
     supplier: "OfficePro Supplies",
     status: "Completed",
+    type: "Single",
   },
   {
     taskName: "Reviewed supplier invoice",
     date: "09 Jun 2026 09:48:32",
     supplier: "Metro Paper Trading",
     status: "Completed",
+    type: "Batch",
   },
   {
     taskName: "Matched logistics invoice",
     date: "08 Jun 2026 04:16:09",
     supplier: "Northstar Logistics",
     status: "Processing",
+    type: "Single",
   },
   {
     taskName: "Checked payment readiness",
     date: "08 Jun 2026 02:39:51",
     supplier: "Brightline Hardware",
     status: "Pending",
+    type: "Batch",
   },
   {
     taskName: "Synced invoice details",
     date: "07 Jun 2026 11:02:44",
     supplier: "Greenfield Packaging",
     status: "Completed",
+    type: "Batch",
   },
   {
     taskName: "Flagged invoice exception",
     date: "07 Jun 2026 09:15:27",
     supplier: "Apex Office Systems",
     status: "Failed",
+    type: "Single",
   },
 ] as const;
 
@@ -344,6 +351,23 @@ function HistoryStatusPill({ status }: Readonly<{ status: string }>) {
     <span className={`inline-flex h-6 items-center gap-1.5 whitespace-nowrap rounded-[6px] px-2 text-[13px] font-medium leading-5 max-xl:gap-1 max-xl:px-1.5 max-xl:text-[12px] ${pill}`}>
       <span className={`size-1.5 shrink-0 rounded-full ${dot}`} />
       {status}
+    </span>
+  );
+}
+
+function TypeBadge({ type }: Readonly<{ type: string }>) {
+  if (type === "Batch") {
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1 rounded-[5px] bg-[#f3f0ff] px-1.5 py-0.5 text-[12px] font-medium leading-4 text-[#7c3aed]">
+        <Layers size={11} strokeWidth={2} className="shrink-0" />
+        Batch
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-[5px] bg-[#f1f0ee] px-1.5 py-0.5 text-[12px] font-medium leading-4 text-[#5f5e59]">
+      <FileText size={11} strokeWidth={2} className="shrink-0" />
+      Single
     </span>
   );
 }
@@ -1700,7 +1724,10 @@ export default function PurchaseInvoicePage() {
                       }}
                     >
                       <td className="border-b border-r border-[#f0efed] pl-6 pr-3 text-[14px] font-medium leading-5 text-[#2c2c2b]">
-                        <span className="block truncate">{history.taskName}</span>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="truncate">{history.taskName}</span>
+                          <TypeBadge type={history.type} />
+                        </div>
                       </td>
                       <td className="border-b border-r border-[#f0efed] px-3 text-[14px] font-normal leading-5 text-[#5f5e59]">
                         <DateCell date={history.date} />

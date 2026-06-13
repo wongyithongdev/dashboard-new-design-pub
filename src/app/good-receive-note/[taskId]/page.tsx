@@ -21,6 +21,7 @@ import {
   Trash2,
   User,
   Wallet,
+  Waves,
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -30,26 +31,27 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 
 /* ─── mock data ─── */
 const taskData = {
-  analyzerTaskId: "7f01eaae-8d65-4385-91fe-ec7a57b9290c",
-  createdAt: "2026-06-09T09:42:21.68223507Z",
+  analyzerTaskId: "9c14fabb-2e37-4d88-b1f0-ce7105d20e89",
+  createdAt: "2026-06-11T08:30:12.98765432Z",
   draft: {
     header: {
-      creditorCode: "400-G001",
-      creditorName: "Camplus Sdn Bhd",
-      creditorRegNo: "202001034812 (1387621-U)",
-      creditorTaxId: "C2183740251",
-      creditorAddress: ["No. 12, Jalan Teknologi 3/4", "Taman Sains Selangor", "47810 Petaling Jaya", "Selangor, Malaysia"],
-      billedTo: "My365Biz Solutions Sdn Bhd",
-      billedToAddress: ["Suite 18-3, Level 18, Menara 1 Sentrum", "201 Jalan Tun Sambanthan", "50470 Kuala Lumpur", "Malaysia"],
+      supplierCode: "400-G001",
+      supplierName: "Camplus Sdn Bhd",
+      supplierRegNo: "202001034812 (1387621-U)",
+      supplierTaxId: "C2183740251",
+      supplierAddress: ["No. 12, Jalan Teknologi 3/4", "Taman Sains Selangor", "47810 Petaling Jaya", "Selangor, Malaysia"],
+      receivedBy: "My365Biz Solutions Sdn Bhd",
+      receivedByAddress: ["Suite 18-3, Level 18, Menara 1 Sentrum", "201 Jalan Tun Sambanthan", "50470 Kuala Lumpur", "Malaysia"],
       currencyCode: "MYR",
       currencyRate: 1,
-      description: "Supply of IT Equipment & Accessories",
+      description: "Goods Received — IT Equipment & Accessories",
       displayTerm: "Net 14 days",
-      docDate: "2026-05-14",
-      dueDate: "2026-05-28",
-      purchaseAgent: "JULIANWG",
-      supplierInvoiceNo: "01-HQ-1018123",
-      notes: "All prices are inclusive of applicable taxes. Please make payment to: CIMB Bank · Acct: 8006123456 · Ref: Invoice No.",
+      docDate: "2026-06-03",
+      dueDate: "2026-06-17",
+      receivingAgent: "MARCUSOH",
+      grnNo: "GRN-2026-00198",
+      poRefNo: "PO-2026-00301",
+      notes: "All items received in good condition. Verified against PO-2026-00301. Signed off by warehouse manager.",
     },
     details: [
       { amount: 4350,  description: "LENOVO YOGA 7 2-in-1 14ILL10 Core Ultra 5 125H",   itemCode: "NBK-LENOVO-Y1401", qty: 1, uom: "UNIT", unitPrice: 4350,  discount: "",   taxCode: "SR6" },
@@ -60,15 +62,15 @@ const taskData = {
     ],
   },
   fileServer: {
-    imageUrl: "https://files.my365biz.com/images/17a5446d85ada5498efd869bf0a71f1aaf1839271161dfd48fc5c04a4ca41fff",
-    link:     "https://files.my365biz.com/files/17a5446d85ada5498efd869bf0a71f1aaf1839271161dfd48fc5c04a4ca41fff",
+    imageUrl: "https://files.my365biz.com/images/grn-preview-placeholder",
+    link:     "https://files.my365biz.com/files/grn-preview-placeholder",
   },
 };
 
 /* ─── types ─── */
 type HeaderForm = {
-  creditorCode: string; creditorName: string; supplierInvoiceNo: string;
-  docDate: string; purchaseAgent: string; currencyCode: string; displayTerm: string;
+  supplierCode: string; supplierName: string; grnNo: string; poRefNo: string;
+  docDate: string; receivingAgent: string; currencyCode: string; displayTerm: string;
 };
 type DetailRow = {
   id: string; itemCode: string; description: string;
@@ -78,10 +80,10 @@ type DetailRow = {
 /* ─── init ─── */
 function initHeader(taskId: string): HeaderForm {
   if (taskId === "new") {
-    return { creditorCode: "", creditorName: "", supplierInvoiceNo: "", docDate: new Date().toISOString().slice(0, 10), purchaseAgent: "", currencyCode: "MYR", displayTerm: "Net 30 days" };
+    return { supplierCode: "", supplierName: "", grnNo: "", poRefNo: "", docDate: new Date().toISOString().slice(0, 10), receivingAgent: "", currencyCode: "MYR", displayTerm: "Net 14 days" };
   }
   const h = taskData.draft.header;
-  return { creditorCode: h.creditorCode, creditorName: h.creditorName, supplierInvoiceNo: h.supplierInvoiceNo, docDate: h.docDate, purchaseAgent: h.purchaseAgent, currencyCode: h.currencyCode, displayTerm: h.displayTerm };
+  return { supplierCode: h.supplierCode, supplierName: h.supplierName, grnNo: h.grnNo, poRefNo: h.poRefNo, docDate: h.docDate, receivingAgent: h.receivingAgent, currencyCode: h.currencyCode, displayTerm: h.displayTerm };
 }
 function initRows(taskId: string): DetailRow[] {
   if (taskId === "new") return [{ id: "row-0", itemCode: "", description: "", qty: 1, uom: "UNIT", unitPrice: 0, discount: "", amount: 0 }];
@@ -92,7 +94,7 @@ function initRows(taskId: string): DetailRow[] {
 type SelectOption = { code: string; label: string };
 
 /* ─── option lists ─── */
-const CREDITOR_OPTIONS: SelectOption[] = [
+const SUPPLIER_OPTIONS: SelectOption[] = [
   { code: "400-G001", label: "Camplus Sdn Bhd" },
   { code: "400-G002", label: "Tech Galaxy Distribution Sdn Bhd" },
   { code: "400-G003", label: "Digital Hub Solutions Sdn Bhd" },
@@ -188,7 +190,6 @@ function CustomSelect({
 
   return (
     <div ref={containerRef} className="relative">
-      {/* Trigger */}
       {ghost ? (
         <button
           type="button"
@@ -215,7 +216,6 @@ function CustomSelect({
         </button>
       )}
 
-      {/* Dropdown */}
       <div
         className={
           "absolute left-0 z-50 w-full min-w-[260px] bg-white rounded-[10px] " +
@@ -230,7 +230,6 @@ function CustomSelect({
               : "opacity-0 scale-[0.98] -translate-y-1 pointer-events-none")
         }
       >
-        {/* Search */}
         <div className="px-1 pt-1 pb-0.5">
           <input
             ref={searchRef}
@@ -244,7 +243,6 @@ function CustomSelect({
 
         <div className="h-px bg-[#f4f4f5] mx-1 my-1" />
 
-        {/* Options */}
         <div className="max-h-[220px] overflow-y-auto p-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {filtered.length === 0 ? (
             <div className="py-4 text-center text-[13px] text-[#a1a1aa]">No results</div>
@@ -280,7 +278,7 @@ function DatePicker({ value, onChange, ghost = false }: { value: string; onChang
 
   const parsed = value ? value.split("-").map(Number) as [number, number, number] : null;
   const [viewYear,  setViewYear]  = useState(parsed?.[0]  ?? new Date().getFullYear());
-  const [viewMonth, setViewMonth] = useState(parsed ? parsed[1] - 1 : new Date().getMonth()); // 0-based
+  const [viewMonth, setViewMonth] = useState(parsed ? parsed[1] - 1 : new Date().getMonth());
 
   useEffect(() => {
     if (!open) return;
@@ -324,7 +322,6 @@ function DatePicker({ value, onChange, ghost = false }: { value: string; onChang
 
   return (
     <div ref={containerRef} className="relative">
-      {/* Trigger */}
       {ghost ? (
         <button
           type="button"
@@ -348,7 +345,6 @@ function DatePicker({ value, onChange, ghost = false }: { value: string; onChang
         </button>
       )}
 
-      {/* Calendar popover */}
       <div
         className={
           "absolute left-0 top-[calc(100%+5px)] z-50 w-[248px] bg-white rounded-[10px] p-3 " +
@@ -360,37 +356,22 @@ function DatePicker({ value, onChange, ghost = false }: { value: string; onChang
             : "opacity-0 scale-[0.98] -translate-y-1 pointer-events-none")
         }
       >
-        {/* Month nav */}
         <div className="flex items-center justify-between mb-2">
-          <button
-            type="button"
-            onClick={prevMonth}
-            className="h-6 w-6 flex items-center justify-center rounded-[5px] text-[#a1a1aa] hover:text-[#18181b] hover:bg-[#f4f4f5] transition-colors duration-75"
-          >
+          <button type="button" onClick={prevMonth} className="h-6 w-6 flex items-center justify-center rounded-[5px] text-[#a1a1aa] hover:text-[#18181b] hover:bg-[#f4f4f5] transition-colors duration-75">
             <ChevronLeft size={12} strokeWidth={2} />
           </button>
-          <span className="text-[13px] font-medium text-[#18181b]">
-            {MONTHS_FULL[viewMonth]} {viewYear}
-          </span>
-          <button
-            type="button"
-            onClick={nextMonth}
-            className="h-6 w-6 flex items-center justify-center rounded-[5px] text-[#a1a1aa] hover:text-[#18181b] hover:bg-[#f4f4f5] transition-colors duration-75"
-          >
+          <span className="text-[13px] font-medium text-[#18181b]">{MONTHS_FULL[viewMonth]} {viewYear}</span>
+          <button type="button" onClick={nextMonth} className="h-6 w-6 flex items-center justify-center rounded-[5px] text-[#a1a1aa] hover:text-[#18181b] hover:bg-[#f4f4f5] transition-colors duration-75">
             <ChevronRight size={12} strokeWidth={2} />
           </button>
         </div>
 
-        {/* DOW headers */}
         <div className="grid grid-cols-7 mb-0.5">
           {DOW_LABELS.map(d => (
-            <div key={d} className="h-6 flex items-center justify-center text-[11px] font-normal text-[#a1a1aa]">
-              {d}
-            </div>
+            <div key={d} className="h-6 flex items-center justify-center text-[11px] font-normal text-[#a1a1aa]">{d}</div>
           ))}
         </div>
 
-        {/* Day grid */}
         <div className="grid grid-cols-7">
           {cells.map((cell, i) => {
             if (cell === null) return <div key={`e-${i}`} className="h-7" />;
@@ -456,7 +437,7 @@ function submitProgress(state: SubmitState, failedAt: string | null) {
   return ({ idle: 0, queued: 20, validating: 55, submitting: 82, completed: 100 } as Record<string, number>)[state] ?? 0;
 }
 
-export default function PurchaseInvoiceTaskPage() {
+export default function GoodReceiveNoteTaskPage() {
   const params = useParams<{ taskId: string }>();
   const taskId = params?.taskId ?? "new";
 
@@ -497,10 +478,9 @@ export default function PurchaseInvoiceTaskPage() {
   function handleSubmit() { if (submitState === "idle") runSubmit(); }
   function handleRetry()   { setSubmitState("idle"); setTimeout(runSubmit, 80); }
   function handleDismiss() { clearTimers(); setSubmitState("idle"); setFailedAt(null); setFailReason(""); }
+
   const [isCompact, setIsCompact] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      window.matchMedia("(max-width: 1279px)").matches,
+    () => typeof window !== "undefined" && window.matchMedia("(max-width: 1279px)").matches,
   );
 
   useEffect(() => {
@@ -551,7 +531,6 @@ export default function PurchaseInvoiceTaskPage() {
     return Number(n).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  /* ── property row helper ── */
   function PropRow({ label, children }: { label: string; icon?: React.ElementType; children: React.ReactNode }) {
     return (
       <div className="flex min-h-[40px] items-start gap-3 px-6 py-2 hover:bg-[#fafafa] rounded-[6px] transition-colors duration-75">
@@ -566,23 +545,23 @@ export default function PurchaseInvoiceTaskPage() {
   return (
     <>
       <div className="dashboard-shell h-screen overflow-hidden md:flex">
-      <DashboardSidebar activeItem="purchase-invoice" isMobileOpen={isSidebarOpen} onMobileClose={() => setIsSidebarOpen(false)} />
+      <DashboardSidebar activeItem="good-receive-note" isMobileOpen={isSidebarOpen} onMobileClose={() => setIsSidebarOpen(false)} />
 
       <main className="flex h-screen min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-white font-sans text-[#18181b]" style={{ fontOpticalSizing: "auto" as never, fontSynthesis: "none", textRendering: "optimizeLegibility", WebkitFontSmoothing: "antialiased" }}>
 
-        {/* ── Top bar: nav + actions only ── */}
+        {/* ── Top bar ── */}
         <div className="flex h-[var(--dashboard-header-h)] shrink-0 items-center justify-between border-b border-[#e4e4e7] px-4 sm:px-6 z-10">
           <div className="flex items-center gap-1.5 min-w-0">
             <button type="button" aria-label="Open navigation" onClick={() => setIsSidebarOpen(true)} className="shrink-0 flex size-7 items-center justify-center rounded-[7px] text-[#52525b] hover:bg-[#fafafa] hover:text-[#18181b] transition-colors xl:hidden">
               <Menu size={16} strokeWidth={1.8} />
             </button>
-            <Link href="/purchase-invoice" className="hidden sm:flex items-center gap-1 text-[13px] text-[#a1a1aa] hover:text-[#18181b] transition-colors duration-75">
+            <Link href="/good-receive-note" className="hidden sm:flex items-center gap-1 text-[13px] text-[#a1a1aa] hover:text-[#18181b] transition-colors duration-75">
               <ArrowLeft size={13} strokeWidth={2} />
-              Purchase Invoice
+              Good Receive Note
             </Link>
             <span className="hidden sm:block text-[#e4e4e7] text-[13px] mx-0.5">/</span>
             <span className="text-[13px] font-medium text-[#18181b] truncate">
-              {header.creditorName || "New Invoice"}
+              {header.supplierName || "New GRN"}
             </span>
           </div>
 
@@ -597,7 +576,7 @@ export default function PurchaseInvoiceTaskPage() {
               disabled={submitState !== "idle"}
               className="inline-flex h-7 items-center gap-1.5 rounded-[7px] bg-[#0075de] px-2.5 text-[12px] font-medium text-white shadow-[0_1px_2px_rgba(0,117,222,0.2)] outline-none transition-colors duration-75 hover:bg-[#005bab] disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Submit Invoice
+              Submit GRN
             </button>
           </div>
         </div>
@@ -606,23 +585,21 @@ export default function PurchaseInvoiceTaskPage() {
         <div className="min-h-0 flex-1 overflow-y-auto lg:overflow-hidden lg:h-full">
           <div className="w-full grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] lg:h-full">
 
-            {/* ════ LEFT: Attio record view ════ */}
+            {/* ════ LEFT ════ */}
             <div className="border-b lg:border-b-0 lg:border-r border-[#e4e4e7] lg:overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
 
-              {/* Record title block */}
               <div className="px-6 pt-8 pb-6 border-b border-[#f4f4f5]">
                 <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="inline-flex h-5 items-center rounded-[5px] bg-[#e9f7ef] px-1.5 text-[11px] font-medium text-[#1f7a4d]">Ready</span>
-                    <span className="text-[12px] text-[#a1a1aa] font-mono">{header.supplierInvoiceNo || "—"}</span>
+                    <span className="text-[12px] text-[#a1a1aa] font-mono">{header.grnNo || "—"}</span>
                   </div>
                   <h1 className="text-[24px] font-semibold tracking-[-0.4px] text-[#09090b] leading-tight">
-                    {header.creditorName || <span className="text-[#d4d4d8]">Supplier name</span>}
+                    {header.supplierName || <span className="text-[#d4d4d8]">Supplier name</span>}
                   </h1>
                 </motion.div>
               </div>
 
-              {/* Property rows */}
               <motion.div
                 className="py-3"
                 initial="hidden"
@@ -630,26 +607,31 @@ export default function PurchaseInvoiceTaskPage() {
                 variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.04 } } }}
               >
                 {([
-                  { label: "Creditor code", icon: Store, content: (
-                    <CustomSelect value={header.creditorCode} options={CREDITOR_OPTIONS} icon={Store} placeholder="Select creditor…" ghost
-                      onChange={(code, opt) => { patch("creditorCode", code); patch("creditorName", opt.label); }} />
+                  { label: "Supplier code", icon: Store, content: (
+                    <CustomSelect value={header.supplierCode} options={SUPPLIER_OPTIONS} icon={Store} placeholder="Select supplier…" ghost
+                      onChange={(code, opt) => { patch("supplierCode", code); patch("supplierName", opt.label); }} />
                   )},
                   { label: "Supplier name", icon: Building2, content: (
                     <div className="flex items-center h-[30px] px-1 text-[13px] text-[#18181b]">
-                      {header.creditorName || <span className="text-[#a1a1aa]">Auto-filled from creditor</span>}
+                      {header.supplierName || <span className="text-[#a1a1aa]">Auto-filled from supplier</span>}
                     </div>
                   )},
-                  { label: "Invoice no", icon: Hash, content: (
-                    <input type="text" value={header.supplierInvoiceNo} onChange={e => patch("supplierInvoiceNo", e.target.value)}
+                  { label: "GRN number", icon: Hash, content: (
+                    <input type="text" value={header.grnNo} onChange={e => patch("grnNo", e.target.value)}
                       className="h-[26px] rounded-[6px] border border-transparent bg-[#f4f4f5] px-2 text-[13px] text-[#18181b] outline-none placeholder:text-[#a1a1aa] hover:bg-[#e4e4e7] focus:border-[#0075de] focus:bg-white focus:ring-1 focus:ring-[#0075de]/20 transition-all duration-75"
-                      placeholder="INV-0001" />
+                      placeholder="GRN-0001" />
                   )},
-                  { label: "Doc date", icon: CalendarDays, content: (
+                  { label: "PO reference", icon: Hash, content: (
+                    <input type="text" value={header.poRefNo} onChange={e => patch("poRefNo", e.target.value)}
+                      className="h-[26px] rounded-[6px] border border-transparent bg-[#f4f4f5] px-2 text-[13px] text-[#18181b] outline-none placeholder:text-[#a1a1aa] hover:bg-[#e4e4e7] focus:border-[#0075de] focus:bg-white focus:ring-1 focus:ring-[#0075de]/20 transition-all duration-75"
+                      placeholder="PO-0001" />
+                  )},
+                  { label: "Receive date", icon: CalendarDays, content: (
                     <DatePicker value={header.docDate} onChange={v => patch("docDate", v)} ghost />
                   )},
-                  { label: "Purchase agent", icon: User, content: (
+                  { label: "Received by", icon: User, content: (
                     <div className="flex items-center h-[30px] px-1 text-[13px] text-[#18181b]">
-                      {header.purchaseAgent || <span className="text-[#a1a1aa]">—</span>}
+                      {header.receivingAgent || <span className="text-[#a1a1aa]">—</span>}
                     </div>
                   )},
                   { label: "Payment term", icon: Clock, content: (
@@ -678,11 +660,10 @@ export default function PurchaseInvoiceTaskPage() {
                 className="border-t border-[#f4f4f5] mt-2 px-6 pt-5 pb-3"
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1], delay: 0.32 }}
+                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1], delay: 0.36 }}
               >
-                <p className="text-[11px] font-semibold text-[#a1a1aa] mb-3 uppercase tracking-[0.4px]">Line items</p>
+                <p className="text-[11px] font-semibold text-[#a1a1aa] mb-3 uppercase tracking-[0.4px]">Received items</p>
 
-                {/* Table header */}
                 <div className="grid mb-1.5 text-[11px] font-medium text-[#a1a1aa]"
                   style={{ gridTemplateColumns: "minmax(80px,1.6fr) minmax(36px,0.6fr) minmax(56px,1fr) minmax(56px,1fr) minmax(38px,0.6fr) minmax(56px,1fr) 24px", gap: "6px" }}>
                   <div>Item code</div>
@@ -694,7 +675,6 @@ export default function PurchaseInvoiceTaskPage() {
                   <div />
                 </div>
 
-                {/* Rows */}
                 <div className="space-y-1.5">
                   {rows.map(row => {
                     const ic = "h-[32px] w-full rounded-[5px] border border-[#e4e4e7] bg-white px-2 text-[13px] text-[#18181b] outline-none transition-all duration-100 placeholder:text-[#d4d4d8] hover:border-[#a1a1aa] focus:border-[#0075de] focus:ring-1 focus:ring-[#0075de]/15";
@@ -737,11 +717,11 @@ export default function PurchaseInvoiceTaskPage() {
                 className="border-t border-[#f4f4f5] mx-6 mt-2 py-6"
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1], delay: 0.4 }}
+                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1], delay: 0.44 }}
               >
                 <div className="flex items-end justify-between">
                   <div>
-                    <p className="text-[11px] font-medium text-[#a1a1aa] mb-0.5">Total due</p>
+                    <p className="text-[11px] font-medium text-[#a1a1aa] mb-0.5">Total value</p>
                     <p className="text-[28px] font-bold tracking-[-0.6px] text-[#09090b] tabular-nums leading-none">
                       {header.currencyCode} {fmtAmt(total)}
                     </p>
@@ -761,12 +741,11 @@ export default function PurchaseInvoiceTaskPage() {
             </div>
 
             {/* ════ RIGHT: Preview ════ */}
-            <div className="hidden bg-white lg:flex lg:flex-col lg:overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div className="hidden bg-[#fafafa] lg:flex lg:flex-col lg:overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
 
-              {/* Preview toolbar */}
-              <div className="flex h-[var(--dashboard-header-h)] shrink-0 items-center justify-between border-b border-[#e4e4e7] bg-white px-6">
+              <div className="flex h-[var(--dashboard-header-h)] shrink-0 items-center justify-between border-b border-[#e4e4e7] bg-[#fafafa] px-6">
                 <p className="text-[12px] font-medium text-[#a1a1aa]">Preview</p>
-                <div className="relative isolate flex items-center gap-0.5 overflow-hidden rounded-[7px] bg-[#f4f4f5] p-[3px]">
+                <div className="relative isolate flex items-center gap-0.5 overflow-hidden rounded-[7px] bg-[#eae8e5] p-[3px]">
                   <span className="pointer-events-none absolute top-[3px] z-0 h-[22px] w-[52px] rounded-[5px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-transform duration-200 ease-in-out"
                     style={{ left: 3, transform: previewMode === "form" ? "translateX(0)" : "translateX(55px)" }} />
                   {(["form", "original"] as const).map(m => (
@@ -778,13 +757,13 @@ export default function PurchaseInvoiceTaskPage() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <div className="flex-1 overflow-y-auto p-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 {previewMode === "original" ? (
-                  <div className="flex flex-col items-center gap-4 p-6">
+                  <div className="flex flex-col items-center gap-4">
                     {!imgError ? (
                       <div className="w-full max-w-2xl mx-auto rounded-xl overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.08)] bg-white">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={taskData.fileServer.imageUrl} alt="Invoice original" onError={() => setImgError(true)} className="w-full h-auto block" />
+                        <img src={taskData.fileServer.imageUrl} alt="GRN original" onError={() => setImgError(true)} className="w-full h-auto block" />
                       </div>
                     ) : (
                       <div className="flex w-full max-w-md flex-col items-center justify-center gap-2 rounded-xl border border-[#e4e4e7] bg-white px-8 py-12 text-center">
@@ -798,110 +777,95 @@ export default function PurchaseInvoiceTaskPage() {
                     </a>
                   </div>
                 ) : (
-                  /* ── Notion document invoice ── */
-                  <div className="max-w-[600px] mx-auto px-8 py-10 w-full">
-
-                    {/* Eyebrow + invoice number */}
-                    <div className="mb-8">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.5px] text-[#a1a1aa] mb-2">Invoice</p>
-                      <h2 className="text-[28px] font-bold tracking-[-0.5px] text-[#09090b] leading-none">
-                        #{header.supplierInvoiceNo || "—"}
-                      </h2>
-                      <div className="flex items-center gap-2 mt-2.5">
-                        <span className="inline-flex items-center rounded-full bg-[#e9f7ef] px-2 py-0.5 text-[11px] font-medium text-[#1f7a4d]">Ready</span>
-                        <span className="text-[12px] text-[#a1a1aa]">{taskData.draft.header.description}</span>
-                      </div>
-                    </div>
-
-                    <div className="border-t border-[#f4f4f5] mb-6" />
-
-                    {/* From / To */}
-                    <div className="grid grid-cols-2 gap-6 mb-6">
+                  <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)] max-w-2xl mx-auto w-full">
+                    <div className="flex items-start justify-between px-8 pt-8 pb-6 border-b border-[#f4f4f5]">
                       <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.4px] text-[#a1a1aa] mb-2">From</p>
-                        <p className="text-[13px] font-semibold text-[#18181b] mb-1">{taskData.draft.header.creditorName}</p>
-                        <p className="text-[12px] text-[#71717a]">Reg: {taskData.draft.header.creditorRegNo}</p>
-                        <p className="text-[12px] text-[#71717a]">Tax ID: {taskData.draft.header.creditorTaxId}</p>
-                        <div className="mt-1.5 space-y-px">
-                          {taskData.draft.header.creditorAddress.map((line, i) => (
-                            <p key={i} className="text-[12px] text-[#a1a1aa]">{line}</p>
+                        <div className="w-9 h-9 bg-[#1a1f2e] rounded-[10px] flex items-center justify-center text-white mb-4">
+                          <Waves size={16} strokeWidth={1.8} />
+                        </div>
+                        <div className="text-[14px] font-semibold text-[#18181b]">{taskData.draft.header.supplierName}</div>
+                        <div className="text-[12px] text-[#a1a1aa] mt-0.5">Reg: {taskData.draft.header.supplierRegNo}</div>
+                        <div className="text-[12px] text-[#a1a1aa]">Tax ID: {taskData.draft.header.supplierTaxId}</div>
+                        <div className="mt-2 space-y-0.5">
+                          {taskData.draft.header.supplierAddress.map((line, i) => <div key={i} className="text-[12px] text-[#a1a1aa]">{line}</div>)}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[10px] font-semibold uppercase tracking-widest text-[#a1a1aa] mb-1">Good Receive Note</div>
+                        <div className="text-[18px] font-bold text-[#18181b]">#{header.grnNo || "—"}</div>
+                        <div className="mt-3 space-y-1">
+                          {[["Date", header.docDate], ["PO Ref", header.poRefNo], ["Term", header.displayTerm], ["Currency", header.currencyCode]].map(([k, v]) => (
+                            <div key={k} className="flex items-center justify-end gap-2 text-[12px]">
+                              <span className="text-[#a1a1aa]">{k}</span>
+                              <span className="font-medium text-[#3f3f46]">{v || "—"}</span>
+                            </div>
                           ))}
                         </div>
                       </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-6 px-8 py-5 border-b border-[#f4f4f5]">
                       <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.4px] text-[#a1a1aa] mb-2">Billed To</p>
-                        <p className="text-[13px] font-semibold text-[#18181b] mb-1">{taskData.draft.header.billedTo}</p>
-                        {taskData.draft.header.billedToAddress.map((line, i) => (
-                          <p key={i} className="text-[12px] text-[#a1a1aa] mt-0.5">{line}</p>
-                        ))}
+                        <div className="text-[10px] font-semibold uppercase tracking-wider text-[#a1a1aa] mb-1.5">Received By</div>
+                        <div className="text-[13px] font-semibold text-[#18181b]">{taskData.draft.header.receivedBy}</div>
+                        {taskData.draft.header.receivedByAddress.map((line, i) => <div key={i} className="text-[12px] text-[#a1a1aa] mt-0.5">{line}</div>)}
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-semibold uppercase tracking-wider text-[#a1a1aa] mb-1.5">Agent</div>
+                        <div className="text-[13px] font-semibold text-[#18181b]">{header.receivingAgent || "—"}</div>
+                        <div className="text-[10px] font-semibold uppercase tracking-wider text-[#a1a1aa] mb-1.5 mt-4">Description</div>
+                        <div className="text-[12px] text-[#3f3f46]">{taskData.draft.header.description}</div>
                       </div>
                     </div>
 
-                    {/* Metadata strip */}
-                    <div className="grid grid-cols-4 gap-4 border-t border-b border-[#f4f4f5] py-4 mb-7">
-                      {([
-                        ["Date", header.docDate || "—"],
-                        ["Due", taskData.draft.header.dueDate],
-                        ["Term", header.displayTerm],
-                        ["Agent", header.purchaseAgent || "—"],
-                      ] as const).map(([k, v]) => (
-                        <div key={k}>
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.4px] text-[#a1a1aa] mb-1">{k}</p>
-                          <p className="text-[13px] font-medium text-[#18181b]">{v}</p>
-                        </div>
-                      ))}
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-[11px] min-w-[560px]">
+                        <thead>
+                          <tr className="border-b border-[#f4f4f5]">
+                            {["Item Code", "Description", "QTY", "UOM", "Price", "Disc", "Amount"].map((h, i) => (
+                              <th key={h} className={`h-9 font-medium text-[#a1a1aa] py-2 ${i === 0 ? "text-left pl-8 pr-2 w-[130px]" : i === 1 ? "text-left px-2" : i === 2 ? "text-right px-2 w-[36px]" : i === 3 ? "text-center px-2 w-[44px]" : i === 6 ? "text-right pl-2 pr-8 w-[80px]" : "text-right px-2 w-[60px]"}`}>
+                                {h}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {rows.map(row => (
+                            <tr key={row.id} className="border-b border-[#fafafa] hover:bg-[#fafaf9] transition-colors">
+                              <td className="pl-8 pr-2 py-3 font-mono text-[11px] text-[#a1a1aa]">{row.itemCode || "—"}</td>
+                              <td className="px-2 py-3 text-[#3f3f46] max-w-[140px]"><div className="truncate">{row.description || "—"}</div></td>
+                              <td className="px-2 py-3 text-right text-[#3f3f46] tabular-nums">{row.qty}</td>
+                              <td className="px-2 py-3 text-center text-[#a1a1aa]">{row.uom}</td>
+                              <td className="px-2 py-3 text-right text-[#3f3f46] tabular-nums">{fmtAmt(row.unitPrice)}</td>
+                              <td className="px-2 py-3 text-right text-[#a1a1aa]">{row.discount || "—"}</td>
+                              <td className="pl-2 pr-8 py-3 text-right font-semibold text-[#18181b] tabular-nums">{fmtAmt(row.amount)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
 
-                    {/* Line items */}
-                    <div className="mb-7">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.4px] text-[#a1a1aa] mb-3">Line Items</p>
-                      <div className="grid text-[11px] font-medium text-[#a1a1aa] border-b border-[#e4e4e7] pb-2"
-                        style={{ gridTemplateColumns: "minmax(80px,1.3fr) minmax(90px,2fr) 40px 72px 38px 76px" }}>
-                        <div>Code</div>
-                        <div className="pl-1">Description</div>
-                        <div className="text-right">Qty</div>
-                        <div className="text-right">Price</div>
-                        <div className="text-right">Disc</div>
-                        <div className="text-right">Amount</div>
-                      </div>
-                      {rows.map(row => (
-                        <div key={row.id}
-                          className="grid items-center border-b border-[#f4f4f5] py-2.5 hover:bg-[#fafafa] -mx-2 px-2 rounded-[4px] transition-colors duration-75"
-                          style={{ gridTemplateColumns: "minmax(80px,1.3fr) minmax(90px,2fr) 40px 72px 38px 76px" }}>
-                          <div className="font-mono text-[11px] text-[#71717a] truncate">{row.itemCode || "—"}</div>
-                          <div className="text-[12px] text-[#3f3f46] truncate pl-1">{row.description || "—"}</div>
-                          <div className="text-[12px] text-[#3f3f46] text-right tabular-nums">{row.qty}</div>
-                          <div className="text-[12px] text-[#3f3f46] text-right tabular-nums">{fmtAmt(row.unitPrice)}</div>
-                          <div className="text-[12px] text-[#a1a1aa] text-right">{row.discount ? `${row.discount}%` : "—"}</div>
-                          <div className="text-[12px] font-semibold text-[#18181b] text-right tabular-nums">{fmtAmt(row.amount)}</div>
+                    <div className="px-8 py-6 border-t border-[#f4f4f5]">
+                      <div className="flex items-start justify-between gap-8">
+                        <div className="flex-1 max-w-xs">
+                          <div className="text-[10px] font-semibold uppercase tracking-wider text-[#a1a1aa] mb-1.5">Notes</div>
+                          <p className="text-[12px] text-[#a1a1aa] leading-relaxed">{taskData.draft.header.notes}</p>
                         </div>
-                      ))}
-                    </div>
-
-                    {/* Totals */}
-                    <div className="flex justify-end mb-8">
-                      <div className="w-52 space-y-1.5">
-                        <div className="flex justify-between text-[13px]">
-                          <span className="text-[#71717a]">Subtotal</span>
-                          <span className="tabular-nums text-[#18181b]">{header.currencyCode} {fmtAmt(total)}</span>
-                        </div>
-                        <div className="flex justify-between text-[13px]">
-                          <span className="text-[#71717a]">Tax (6% SST)</span>
-                          <span className="tabular-nums text-[#18181b]">{header.currencyCode} {fmtAmt(total * 0.06)}</span>
-                        </div>
-                        <div className="flex justify-between items-baseline pt-2.5 border-t border-[#e4e4e7]">
-                          <span className="text-[13px] font-semibold text-[#18181b]">Total</span>
-                          <span className="text-[20px] font-bold tracking-[-0.4px] tabular-nums text-[#09090b] leading-none">
-                            {header.currencyCode} {fmtAmt(total * 1.06)}
-                          </span>
+                        <div className="w-48 space-y-1.5 shrink-0">
+                          <div className="flex justify-between text-[12px]">
+                            <span className="text-[#a1a1aa]">Subtotal</span>
+                            <span className="font-medium text-[#3f3f46] tabular-nums">{header.currencyCode} {fmtAmt(total)}</span>
+                          </div>
+                          <div className="flex justify-between text-[12px]">
+                            <span className="text-[#a1a1aa]">Tax (6%)</span>
+                            <span className="font-medium text-[#3f3f46] tabular-nums">{header.currencyCode} {fmtAmt(total * 0.06)}</span>
+                          </div>
+                          <div className="flex justify-between text-[14px] font-bold pt-2 border-t border-[#e4e4e7]">
+                            <span className="text-[#18181b]">Total</span>
+                            <span className="text-[#18181b] tabular-nums">{header.currencyCode} {fmtAmt(total * 1.06)}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-
-                    {/* Payment info */}
-                    <div className="border-t border-[#f4f4f5] pt-5 pb-10">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.4px] text-[#a1a1aa] mb-2">Payment Info</p>
-                      <p className="text-[12px] text-[#a1a1aa] leading-relaxed">{taskData.draft.header.notes}</p>
                     </div>
                   </div>
                 )}
@@ -923,7 +887,6 @@ export default function PurchaseInvoiceTaskPage() {
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="fixed bottom-5 right-5 z-50 w-[280px] overflow-hidden rounded-[12px] border border-[#e4e4e7] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.12),0_0_0_1px_rgba(0,0,0,0.04)]"
           >
-            {/* Progress bar */}
             <div className="h-[3px] bg-[#f4f4f5]">
               <motion.div
                 className={submitState === "completed" ? "h-full bg-[#16a34a]" : submitState === "failed" ? "h-full bg-[#dc2626]" : "h-full bg-[#0075de]"}
@@ -933,12 +896,10 @@ export default function PurchaseInvoiceTaskPage() {
               />
             </div>
 
-            {/* Body */}
             <div className="px-4 py-3.5">
-              {/* Header */}
               <div className="flex items-center justify-between mb-3">
                 <span className={`text-[13px] font-semibold ${submitState === "failed" ? "text-[#dc2626]" : "text-[#18181b]"}`}>
-                  {submitState === "completed" ? "Invoice submitted" : submitState === "failed" ? "Submission failed" : "Submitting invoice…"}
+                  {submitState === "completed" ? "GRN submitted" : submitState === "failed" ? "Submission failed" : "Submitting GRN…"}
                 </span>
                 {(submitState === "completed" || submitState === "failed") && (
                   <button type="button" onClick={handleDismiss} className="flex size-5 items-center justify-center rounded-[4px] text-[#a1a1aa] hover:bg-[#f4f4f5] hover:text-[#18181b] transition-colors duration-75">
@@ -947,7 +908,6 @@ export default function PurchaseInvoiceTaskPage() {
                 )}
               </div>
 
-              {/* Steps */}
               <div className="space-y-2.5">
                 {SUBMIT_STEPS.map(step => {
                   const status = stepStatus(step.key, submitState, failedAt);
@@ -979,7 +939,6 @@ export default function PurchaseInvoiceTaskPage() {
                   );
                 })}
 
-                {/* Completed row */}
                 <AnimatePresence>
                   {submitState === "completed" && (
                     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="flex items-center gap-2.5">
@@ -992,7 +951,6 @@ export default function PurchaseInvoiceTaskPage() {
                 </AnimatePresence>
               </div>
 
-              {/* Failed reason + actions */}
               <AnimatePresence>
                 {submitState === "failed" && (
                   <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: "easeOut" }} className="mt-3.5 space-y-2.5">
@@ -1021,7 +979,7 @@ export default function PurchaseInvoiceTaskPage() {
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
+    </AnimatePresence>
     </>
   );
 }

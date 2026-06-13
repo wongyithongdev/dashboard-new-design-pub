@@ -15,6 +15,7 @@ import {
   FolderOpen,
   Hash,
   Info,
+  Layers,
   ListFilter,
   Menu,
   Megaphone,
@@ -60,6 +61,7 @@ type GoodReceiveHistory = {
   supplier: string;
   dateTime: string;
   status: "Completed" | "Processing" | "Pending" | "Failed";
+  type: "Single" | "Batch";
 };
 
 type GoodReceiveNoteDetail = {
@@ -122,36 +124,42 @@ const noteHistory: GoodReceiveHistory[] = [
     supplier: "OfficePro Supplies",
     dateTime: "2026-06-09T10:24:18",
     status: "Completed",
+    type: "Single",
   },
   {
     taskName: "Reviewed delivery details",
     supplier: "Metro Paper Trading",
     dateTime: "2026-06-09T09:48:32",
     status: "Completed",
+    type: "Batch",
   },
   {
     taskName: "Matched supplier delivery order",
     supplier: "Northstar Logistics",
     dateTime: "2026-06-08T04:16:09",
     status: "Processing",
+    type: "Single",
   },
   {
     taskName: "Checked received item quantity",
     supplier: "Brightline Hardware",
     dateTime: "2026-06-08T02:39:15",
     status: "Pending",
+    type: "Batch",
   },
   {
     taskName: "Synced warehouse receive note",
     supplier: "Greenfield Packaging",
     dateTime: "2026-06-07T11:02:44",
     status: "Completed",
+    type: "Batch",
   },
   {
     taskName: "Flagged receive note exception",
     supplier: "Apex Office Systems",
     dateTime: "2026-06-07T09:15:27",
     status: "Failed",
+    type: "Single",
   },
 ];
 
@@ -368,6 +376,23 @@ function AmountPill({ amount }: Readonly<{ amount: number }>) {
       className={`inline-flex h-6 items-center rounded-[6px] px-2 text-[14px] font-medium leading-5 tabular-nums ${amountStyle}`}
     >
       {formatCurrency(amount)}
+    </span>
+  );
+}
+
+function TypeBadge({ type }: Readonly<{ type: string }>) {
+  if (type === "Batch") {
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1 rounded-[5px] bg-[#f3f0ff] px-1.5 py-0.5 text-[12px] font-medium leading-4 text-[#7c3aed]">
+        <Layers size={11} strokeWidth={2} className="shrink-0" />
+        Batch
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-[5px] bg-[#f1f0ee] px-1.5 py-0.5 text-[12px] font-medium leading-4 text-[#5f5e59]">
+      <FileText size={11} strokeWidth={2} className="shrink-0" />
+      Single
     </span>
   );
 }
@@ -1276,7 +1301,10 @@ export default function GoodReceiveNotePage() {
                         }}
                       >
                         <td className="border-b border-r border-[#f0efed] pl-6 pr-3 text-[14px] font-medium leading-5 text-[#2c2c2b]">
-                          {history.taskName}
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="truncate">{history.taskName}</span>
+                            <TypeBadge type={history.type} />
+                          </div>
                         </td>
                         <td className="border-b border-r border-[#f0efed] px-3">
                           <DateTimeCell dateTime={history.dateTime} />
