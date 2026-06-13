@@ -552,13 +552,14 @@ export default function PurchaseInvoiceTaskPage() {
   }
 
   /* ── property row helper ── */
-  function PropRow({ label, children }: { label: string; icon?: React.ElementType; children: React.ReactNode }) {
+  function PropRow({ label, icon: Icon, children }: { label: string; icon: React.ElementType; children: React.ReactNode }) {
     return (
-      <div className="flex min-h-[40px] items-start gap-3 px-6 py-2 hover:bg-[#fafafa] rounded-[6px] transition-colors duration-75">
-        <div className="flex w-[148px] shrink-0 items-center pt-[7px]">
-          <span className="text-[13px] font-medium text-[#71717a] truncate">{label}</span>
+      <div className="flex min-h-[38px] items-center border-b border-[#f4f4f5] px-6 hover:bg-[#fafafa] transition-colors duration-75">
+        <div className="flex w-[148px] shrink-0 items-center gap-2">
+          <Icon size={13} strokeWidth={1.7} className="shrink-0 text-[#a1a1aa]" />
+          <span className="text-[13px] text-[#71717a] truncate">{label}</span>
         </div>
-        <div className="flex-1 min-w-0 pt-[5px]">{children}</div>
+        <div className="flex-1 min-w-0 py-1.5">{children}</div>
       </div>
     );
   }
@@ -609,22 +610,22 @@ export default function PurchaseInvoiceTaskPage() {
             {/* ════ LEFT: Attio record view ════ */}
             <div className="border-b lg:border-b-0 lg:border-r border-[#e4e4e7] lg:overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
 
-              {/* Record title block */}
-              <div className="px-6 pt-8 pb-6 border-b border-[#f4f4f5]">
+              {/* Page title block */}
+              <div className="px-6 pt-10 pb-7">
                 <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}>
-                  <div className="flex items-center gap-2 mb-1">
+                  <h1 className="text-[30px] font-bold tracking-[-0.6px] text-[#09090b] leading-tight mb-3">
+                    {header.creditorName || <span className="text-[#d4d4d8]">Supplier name</span>}
+                  </h1>
+                  <div className="flex items-center gap-2">
                     <span className="inline-flex h-5 items-center rounded-[5px] bg-[#e9f7ef] px-1.5 text-[11px] font-medium text-[#1f7a4d]">Ready</span>
                     <span className="text-[12px] text-[#a1a1aa] font-mono">{header.supplierInvoiceNo || "—"}</span>
                   </div>
-                  <h1 className="text-[24px] font-semibold tracking-[-0.4px] text-[#09090b] leading-tight">
-                    {header.creditorName || <span className="text-[#d4d4d8]">Supplier name</span>}
-                  </h1>
                 </motion.div>
               </div>
 
               {/* Property rows */}
               <motion.div
-                className="py-3"
+                className="border-t border-[#f4f4f5]"
                 initial="hidden"
                 animate="visible"
                 variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.04 } } }}
@@ -675,12 +676,15 @@ export default function PurchaseInvoiceTaskPage() {
 
               {/* Items section */}
               <motion.div
-                className="border-t border-[#f4f4f5] mt-2 px-6 pt-5 pb-3"
+                className="border-t border-[#f4f4f5] px-6 pt-5 pb-3"
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1], delay: 0.32 }}
               >
-                <p className="text-[11px] font-semibold text-[#a1a1aa] mb-3 uppercase tracking-[0.4px]">Line items</p>
+                <div className="flex items-center gap-2 mb-3">
+                  <Package size={13} strokeWidth={1.7} className="text-[#a1a1aa]" />
+                  <p className="text-[12px] font-semibold text-[#71717a] uppercase tracking-[0.4px]">Line items</p>
+                </div>
 
                 {/* Table header */}
                 <div className="grid mb-1.5 text-[11px] font-medium text-[#a1a1aa]"
