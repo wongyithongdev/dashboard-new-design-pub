@@ -552,11 +552,11 @@ export default function PurchaseInvoiceTaskPage() {
   }
 
   /* ── property row helper ── */
-  function PropRow({ label, icon: Icon, children }: { label: string; icon: React.ElementType; children: React.ReactNode }) {
+  function PropRow({ label, icon, children }: { label: string; icon: string; children: React.ReactNode }) {
     return (
       <div className="flex min-h-[38px] items-center border-b border-[#f4f4f5] px-6 hover:bg-[#fafafa] transition-colors duration-75">
         <div className="flex w-[148px] shrink-0 items-center gap-2">
-          <Icon size={13} strokeWidth={1.7} className="shrink-0 text-[#a1a1aa]" />
+          <span className="text-[16px] shrink-0">{icon}</span>
           <span className="text-[13px] text-[#71717a] truncate">{label}</span>
         </div>
         <div className="flex-1 min-w-0 py-1.5">{children}</div>
@@ -631,37 +631,37 @@ export default function PurchaseInvoiceTaskPage() {
                 variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.04 } } }}
               >
                 {([
-                  { label: "Creditor code", icon: Store, content: (
+                  { label: "Creditor code", icon: "🏬", content: (
                     <CustomSelect value={header.creditorCode} options={CREDITOR_OPTIONS} icon={Store} placeholder="Select creditor…" ghost
                       onChange={(code, opt) => { patch("creditorCode", code); patch("creditorName", opt.label); }} />
                   )},
-                  { label: "Supplier name", icon: Building2, content: (
+                  { label: "Supplier name", icon: "🏢", content: (
                     <div className="flex items-center h-[30px] px-1 text-[13px] text-[#18181b]">
                       {header.creditorName || <span className="text-[#a1a1aa]">Auto-filled from creditor</span>}
                     </div>
                   )},
-                  { label: "Invoice no", icon: Hash, content: (
+                  { label: "Invoice no", icon: "📋", content: (
                     <input type="text" value={header.supplierInvoiceNo} onChange={e => patch("supplierInvoiceNo", e.target.value)}
                       className="h-[26px] rounded-[6px] border border-transparent bg-[#f4f4f5] px-2 text-[13px] text-[#18181b] outline-none placeholder:text-[#a1a1aa] hover:bg-[#e4e4e7] focus:border-[#0075de] focus:bg-white focus:ring-1 focus:ring-[#0075de]/20 transition-all duration-75"
                       placeholder="INV-0001" />
                   )},
-                  { label: "Doc date", icon: CalendarDays, content: (
+                  { label: "Doc date", icon: "🗓️", content: (
                     <DatePicker value={header.docDate} onChange={v => patch("docDate", v)} ghost />
                   )},
-                  { label: "Purchase agent", icon: User, content: (
+                  { label: "Purchase agent", icon: "💼", content: (
                     <div className="flex items-center h-[30px] px-1 text-[13px] text-[#18181b]">
                       {header.purchaseAgent || <span className="text-[#a1a1aa]">—</span>}
                     </div>
                   )},
-                  { label: "Payment term", icon: Clock, content: (
+                  { label: "Payment term", icon: "⏳", content: (
                     <div className="flex items-center h-[30px] px-1 text-[13px] text-[#18181b]">
                       {header.displayTerm || <span className="text-[#a1a1aa]">—</span>}
                     </div>
                   )},
-                  { label: "Currency", icon: Wallet, content: (
+                  { label: "Currency", icon: "💵", content: (
                     <div className="flex items-center gap-2">
                       <span className="inline-flex items-center gap-1.5 h-[26px] rounded-[6px] bg-[#f4f4f5] px-2 text-[13px] text-[#18181b]">
-                        <Wallet size={12} strokeWidth={1.8} className="text-[#a1a1aa]" />
+                        💳
                         {header.currencyCode || "MYR"}
                       </span>
                       <span className="text-[12px] text-[#a1a1aa]">Rate 1.0000</span>
@@ -682,7 +682,7 @@ export default function PurchaseInvoiceTaskPage() {
                 transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1], delay: 0.32 }}
               >
                 <div className="flex items-center gap-2 mb-3">
-                  <Package size={13} strokeWidth={1.7} className="text-[#a1a1aa]" />
+                  <span className="text-[16px]">📦</span>
                   <p className="text-[12px] font-semibold text-[#71717a] uppercase tracking-[0.4px]">Line items</p>
                 </div>
 

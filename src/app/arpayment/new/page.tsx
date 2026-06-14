@@ -342,7 +342,7 @@ function PropRow({ label, children }: { label: string; children: React.ReactNode
 }
 
 /* ─── main page ─── */
-export default function NewPaymentPage() {
+export default function NewARPaymentPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   /* submit state */
@@ -430,7 +430,7 @@ export default function NewPaymentPage() {
   return (
     <>
     <div className="dashboard-shell h-screen overflow-hidden md:flex">
-      <DashboardSidebar activeItem="ap-payment" isMobileOpen={isSidebarOpen} onMobileClose={() => setIsSidebarOpen(false)} />
+      <DashboardSidebar activeItem="ar-payment" isMobileOpen={isSidebarOpen} onMobileClose={() => setIsSidebarOpen(false)} />
 
       <main className="flex h-screen min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-white font-sans text-[#111827]"
         style={{ fontOpticalSizing: "auto" as never, fontSynthesis: "none", textRendering: "optimizeLegibility", WebkitFontSmoothing: "antialiased" }}>
@@ -442,16 +442,16 @@ export default function NewPaymentPage() {
               className="shrink-0 flex size-7 items-center justify-center rounded-[7px] text-[#6b7280] hover:bg-[#f9fafb] hover:text-[#111827] transition-colors xl:hidden">
               <Menu size={16} strokeWidth={1.8} />
             </button>
-            <Link href="/appayment" className="hidden sm:flex items-center gap-1 text-[13px] text-[#9ca3af] hover:text-[#111827] transition-colors duration-75">
+            <Link href="/arpayment" className="hidden sm:flex items-center gap-1 text-[13px] text-[#9ca3af] hover:text-[#111827] transition-colors duration-75">
               <ArrowLeft size={13} strokeWidth={2} />
-              AP Payment
+              AR Payment
             </Link>
             <span className="hidden sm:block text-[#d1d5db] text-[13px] mx-0.5">/</span>
             <span className="text-[13px] font-medium text-[#111827]">New Payment</span>
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
-            <Link href="/appayment"
+            <Link href="/arpayment"
               className="inline-flex h-7 items-center gap-1.5 rounded-[7px] border border-[#e5e7eb] bg-white px-3 text-[12px] font-medium text-[#6b7280] outline-none transition-colors duration-75 hover:bg-[#f9fafb] hover:text-[#111827]">
               Discard
             </Link>

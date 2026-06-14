@@ -89,6 +89,15 @@ body {
   --history-col-supplier: 280px;
   --history-col-status: 150px;
   --history-col-action: 110px;
+  --joborder-table-min-w: 1370px;
+  --joborder-col-number: 150px;
+  --joborder-col-customer: 230px;
+  --joborder-col-date: 140px;
+  --joborder-col-status: 130px;
+  --joborder-col-technician: 160px;
+  --joborder-col-category: 180px;
+  --joborder-col-commission: 130px;
+  --joborder-col-action: 110px;
 }
 
 @media (min-width: 1681px) and (max-width: 1920px) and (hover: hover) and (pointer: fine) {
@@ -156,6 +165,15 @@ body {
     --history-col-supplier: 260px;
     --history-col-status: 138px;
     --history-col-action: 96px;
+    --joborder-table-min-w: 1264px;
+    --joborder-col-number: 140px;
+    --joborder-col-customer: 212px;
+    --joborder-col-date: 130px;
+    --joborder-col-status: 122px;
+    --joborder-col-technician: 150px;
+    --joborder-col-category: 168px;
+    --joborder-col-commission: 118px;
+    --joborder-col-action: 98px;
   }
 }
 
@@ -217,6 +235,15 @@ body {
     --history-col-supplier: 200px;
     --history-col-status: 120px;
     --history-col-action: 82px;
+    --joborder-table-min-w: 1148px;
+    --joborder-col-number: 128px;
+    --joborder-col-customer: 186px;
+    --joborder-col-date: 118px;
+    --joborder-col-status: 108px;
+    --joborder-col-technician: 140px;
+    --joborder-col-category: 152px;
+    --joborder-col-commission: 108px;
+    --joborder-col-action: 86px;
   }
 }
 
@@ -278,6 +305,15 @@ body {
     --history-col-supplier: 200px;
     --history-col-status: 114px;
     --history-col-action: 76px;
+    --joborder-table-min-w: 1054px;
+    --joborder-col-number: 116px;
+    --joborder-col-customer: 168px;
+    --joborder-col-date: 106px;
+    --joborder-col-status: 98px;
+    --joborder-col-technician: 128px;
+    --joborder-col-category: 138px;
+    --joborder-col-commission: 96px;
+    --joborder-col-action: 80px;
   }
 }
 
@@ -339,6 +375,15 @@ body {
     --history-col-supplier: 200px;
     --history-col-status: 114px;
     --history-col-action: 76px;
+    --joborder-table-min-w: 1054px;
+    --joborder-col-number: 116px;
+    --joborder-col-customer: 168px;
+    --joborder-col-date: 106px;
+    --joborder-col-status: 98px;
+    --joborder-col-technician: 128px;
+    --joborder-col-category: 138px;
+    --joborder-col-commission: 96px;
+    --joborder-col-action: 80px;
   }
 }
 
@@ -399,6 +444,15 @@ body {
     --history-col-supplier: 200px;
     --history-col-status: 120px;
     --history-col-action: 82px;
+    --joborder-table-min-w: 1148px;
+    --joborder-col-number: 128px;
+    --joborder-col-customer: 186px;
+    --joborder-col-date: 118px;
+    --joborder-col-status: 108px;
+    --joborder-col-technician: 140px;
+    --joborder-col-category: 152px;
+    --joborder-col-commission: 108px;
+    --joborder-col-action: 86px;
   }
 }
 
@@ -459,6 +513,15 @@ body {
     --history-col-supplier: 152px;
     --history-col-status: 96px;
     --history-col-action: 88px;
+    --joborder-table-min-w: 948px;
+    --joborder-col-number: 104px;
+    --joborder-col-customer: 148px;
+    --joborder-col-date: 100px;
+    --joborder-col-status: 90px;
+    --joborder-col-technician: 112px;
+    --joborder-col-category: 122px;
+    --joborder-col-commission: 84px;
+    --joborder-col-action: 68px;
   }
 }
 
@@ -518,6 +581,15 @@ body {
     --history-col-supplier: 140px;
     --history-col-status: 90px;
     --history-col-action: 80px;
+    --joborder-table-min-w: 888px;
+    --joborder-col-number: 96px;
+    --joborder-col-customer: 138px;
+    --joborder-col-date: 92px;
+    --joborder-col-status: 84px;
+    --joborder-col-technician: 104px;
+    --joborder-col-category: 114px;
+    --joborder-col-commission: 76px;
+    --joborder-col-action: 60px;
   }
 }
 

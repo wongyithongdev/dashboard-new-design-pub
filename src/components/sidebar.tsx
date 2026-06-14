@@ -147,6 +147,8 @@ const sidebarItemHrefs: Partial<Record<SidebarItemId, string>> = {
   "sales-invoice": "/sales-invoice",
   arpayment: "/arpayment",
   "sales-order": "/sales-order",
+  "joborder-employee": "/joborder-employee",
+  "joborder-management": "/joborder-management",
 };
 
 function getCompanyInitials(name: string) {

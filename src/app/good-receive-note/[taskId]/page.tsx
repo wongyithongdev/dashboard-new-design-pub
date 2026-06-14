@@ -3,15 +3,12 @@
 import { DashboardSidebar } from "@/components/sidebar";
 import {
   ArrowLeft,
-  Building2,
   CalendarDays,
   Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Clock,
   Download,
-  Hash,
   type LucideIcon,
   Menu,
   Package,
@@ -19,9 +16,6 @@ import {
   Store,
   Tag,
   Trash2,
-  User,
-  Wallet,
-  Waves,
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -531,13 +525,14 @@ export default function GoodReceiveNoteTaskPage() {
     return Number(n).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  function PropRow({ label, children }: { label: string; icon?: React.ElementType; children: React.ReactNode }) {
+  function PropRow({ label, icon, children }: { label: string; icon: string; children: React.ReactNode }) {
     return (
-      <div className="flex min-h-[40px] items-start gap-3 px-6 py-2 hover:bg-[#fafafa] rounded-[6px] transition-colors duration-75">
-        <div className="flex w-[148px] shrink-0 items-center pt-[7px]">
-          <span className="text-[13px] font-medium text-[#71717a] truncate">{label}</span>
+      <div className="flex min-h-[38px] items-center border-b border-[#f4f4f5] px-6 hover:bg-[#fafafa] transition-colors duration-75">
+        <div className="flex w-[148px] shrink-0 items-center gap-2">
+          <span className="text-[16px] shrink-0">{icon}</span>
+          <span className="text-[13px] text-[#71717a] truncate">{label}</span>
         </div>
-        <div className="flex-1 min-w-0 pt-[5px]">{children}</div>
+        <div className="flex-1 min-w-0 py-1.5">{children}</div>
       </div>
     );
   }
@@ -588,61 +583,61 @@ export default function GoodReceiveNoteTaskPage() {
             {/* ════ LEFT ════ */}
             <div className="border-b lg:border-b-0 lg:border-r border-[#e4e4e7] lg:overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
 
-              <div className="px-6 pt-8 pb-6 border-b border-[#f4f4f5]">
+              <div className="px-6 pt-10 pb-7">
                 <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}>
-                  <div className="flex items-center gap-2 mb-1">
+                  <h1 className="text-[30px] font-bold tracking-[-0.6px] text-[#09090b] leading-tight mb-3">
+                    {header.supplierName || <span className="text-[#d4d4d8]">Supplier name</span>}
+                  </h1>
+                  <div className="flex items-center gap-2">
                     <span className="inline-flex h-5 items-center rounded-[5px] bg-[#e9f7ef] px-1.5 text-[11px] font-medium text-[#1f7a4d]">Ready</span>
                     <span className="text-[12px] text-[#a1a1aa] font-mono">{header.grnNo || "—"}</span>
                   </div>
-                  <h1 className="text-[24px] font-semibold tracking-[-0.4px] text-[#09090b] leading-tight">
-                    {header.supplierName || <span className="text-[#d4d4d8]">Supplier name</span>}
-                  </h1>
                 </motion.div>
               </div>
 
               <motion.div
-                className="py-3"
+                className="border-t border-[#f4f4f5]"
                 initial="hidden"
                 animate="visible"
                 variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.04 } } }}
               >
                 {([
-                  { label: "Supplier code", icon: Store, content: (
+                  { label: "Supplier code", icon: "🏬", content: (
                     <CustomSelect value={header.supplierCode} options={SUPPLIER_OPTIONS} icon={Store} placeholder="Select supplier…" ghost
                       onChange={(code, opt) => { patch("supplierCode", code); patch("supplierName", opt.label); }} />
                   )},
-                  { label: "Supplier name", icon: Building2, content: (
+                  { label: "Supplier name", icon: "🏢", content: (
                     <div className="flex items-center h-[30px] px-1 text-[13px] text-[#18181b]">
                       {header.supplierName || <span className="text-[#a1a1aa]">Auto-filled from supplier</span>}
                     </div>
                   )},
-                  { label: "GRN number", icon: Hash, content: (
+                  { label: "GRN number", icon: "📋", content: (
                     <input type="text" value={header.grnNo} onChange={e => patch("grnNo", e.target.value)}
                       className="h-[26px] rounded-[6px] border border-transparent bg-[#f4f4f5] px-2 text-[13px] text-[#18181b] outline-none placeholder:text-[#a1a1aa] hover:bg-[#e4e4e7] focus:border-[#0075de] focus:bg-white focus:ring-1 focus:ring-[#0075de]/20 transition-all duration-75"
                       placeholder="GRN-0001" />
                   )},
-                  { label: "PO reference", icon: Hash, content: (
+                  { label: "PO reference", icon: "🔗", content: (
                     <input type="text" value={header.poRefNo} onChange={e => patch("poRefNo", e.target.value)}
                       className="h-[26px] rounded-[6px] border border-transparent bg-[#f4f4f5] px-2 text-[13px] text-[#18181b] outline-none placeholder:text-[#a1a1aa] hover:bg-[#e4e4e7] focus:border-[#0075de] focus:bg-white focus:ring-1 focus:ring-[#0075de]/20 transition-all duration-75"
                       placeholder="PO-0001" />
                   )},
-                  { label: "Receive date", icon: CalendarDays, content: (
+                  { label: "Receive date", icon: "🗓️", content: (
                     <DatePicker value={header.docDate} onChange={v => patch("docDate", v)} ghost />
                   )},
-                  { label: "Received by", icon: User, content: (
+                  { label: "Received by", icon: "💼", content: (
                     <div className="flex items-center h-[30px] px-1 text-[13px] text-[#18181b]">
                       {header.receivingAgent || <span className="text-[#a1a1aa]">—</span>}
                     </div>
                   )},
-                  { label: "Payment term", icon: Clock, content: (
+                  { label: "Payment term", icon: "⏳", content: (
                     <div className="flex items-center h-[30px] px-1 text-[13px] text-[#18181b]">
                       {header.displayTerm || <span className="text-[#a1a1aa]">—</span>}
                     </div>
                   )},
-                  { label: "Currency", icon: Wallet, content: (
+                  { label: "Currency", icon: "💵", content: (
                     <div className="flex items-center gap-2">
                       <span className="inline-flex items-center gap-1.5 h-[26px] rounded-[6px] bg-[#f4f4f5] px-2 text-[13px] text-[#18181b]">
-                        <Wallet size={12} strokeWidth={1.8} className="text-[#a1a1aa]" />
+                        💳
                         {header.currencyCode || "MYR"}
                       </span>
                       <span className="text-[12px] text-[#a1a1aa]">Rate 1.0000</span>
@@ -657,12 +652,15 @@ export default function GoodReceiveNoteTaskPage() {
 
               {/* Items section */}
               <motion.div
-                className="border-t border-[#f4f4f5] mt-2 px-6 pt-5 pb-3"
+                className="border-t border-[#f4f4f5] px-6 pt-5 pb-3"
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1], delay: 0.36 }}
               >
-                <p className="text-[11px] font-semibold text-[#a1a1aa] mb-3 uppercase tracking-[0.4px]">Received items</p>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-[16px]">📦</span>
+                  <p className="text-[12px] font-semibold text-[#71717a] uppercase tracking-[0.4px]">Received items</p>
+                </div>
 
                 <div className="grid mb-1.5 text-[11px] font-medium text-[#a1a1aa]"
                   style={{ gridTemplateColumns: "minmax(80px,1.6fr) minmax(36px,0.6fr) minmax(56px,1fr) minmax(56px,1fr) minmax(38px,0.6fr) minmax(56px,1fr) 24px", gap: "6px" }}>
@@ -741,11 +739,11 @@ export default function GoodReceiveNoteTaskPage() {
             </div>
 
             {/* ════ RIGHT: Preview ════ */}
-            <div className="hidden bg-[#fafafa] lg:flex lg:flex-col lg:overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div className="hidden bg-white lg:flex lg:flex-col lg:overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
 
-              <div className="flex h-[var(--dashboard-header-h)] shrink-0 items-center justify-between border-b border-[#e4e4e7] bg-[#fafafa] px-6">
+              <div className="flex h-[var(--dashboard-header-h)] shrink-0 items-center justify-between border-b border-[#e4e4e7] bg-white px-6">
                 <p className="text-[12px] font-medium text-[#a1a1aa]">Preview</p>
-                <div className="relative isolate flex items-center gap-0.5 overflow-hidden rounded-[7px] bg-[#eae8e5] p-[3px]">
+                <div className="relative isolate flex items-center gap-0.5 overflow-hidden rounded-[7px] bg-[#f4f4f5] p-[3px]">
                   <span className="pointer-events-none absolute top-[3px] z-0 h-[22px] w-[52px] rounded-[5px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-transform duration-200 ease-in-out"
                     style={{ left: 3, transform: previewMode === "form" ? "translateX(0)" : "translateX(55px)" }} />
                   {(["form", "original"] as const).map(m => (
@@ -757,9 +755,9 @@ export default function GoodReceiveNoteTaskPage() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 {previewMode === "original" ? (
-                  <div className="flex flex-col items-center gap-4">
+                  <div className="flex flex-col items-center gap-4 p-6">
                     {!imgError ? (
                       <div className="w-full max-w-2xl mx-auto rounded-xl overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.08)] bg-white">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -777,95 +775,103 @@ export default function GoodReceiveNoteTaskPage() {
                     </a>
                   </div>
                 ) : (
-                  <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)] max-w-2xl mx-auto w-full">
-                    <div className="flex items-start justify-between px-8 pt-8 pb-6 border-b border-[#f4f4f5]">
-                      <div>
-                        <div className="w-9 h-9 bg-[#1a1f2e] rounded-[10px] flex items-center justify-center text-white mb-4">
-                          <Waves size={16} strokeWidth={1.8} />
-                        </div>
-                        <div className="text-[14px] font-semibold text-[#18181b]">{taskData.draft.header.supplierName}</div>
-                        <div className="text-[12px] text-[#a1a1aa] mt-0.5">Reg: {taskData.draft.header.supplierRegNo}</div>
-                        <div className="text-[12px] text-[#a1a1aa]">Tax ID: {taskData.draft.header.supplierTaxId}</div>
-                        <div className="mt-2 space-y-0.5">
-                          {taskData.draft.header.supplierAddress.map((line, i) => <div key={i} className="text-[12px] text-[#a1a1aa]">{line}</div>)}
-                        </div>
+                  <div className="max-w-[600px] mx-auto px-8 py-10 w-full">
+
+                    <div className="mb-8">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.5px] text-[#a1a1aa] mb-2">Good Receive Note</p>
+                      <h2 className="text-[28px] font-bold tracking-[-0.5px] text-[#09090b] leading-none">
+                        #{header.grnNo || "—"}
+                      </h2>
+                      <div className="flex items-center gap-2 mt-2.5">
+                        <span className="inline-flex items-center rounded-full bg-[#e9f7ef] px-2 py-0.5 text-[11px] font-medium text-[#1f7a4d]">Ready</span>
+                        <span className="text-[12px] text-[#a1a1aa]">{taskData.draft.header.description}</span>
                       </div>
-                      <div className="text-right">
-                        <div className="text-[10px] font-semibold uppercase tracking-widest text-[#a1a1aa] mb-1">Good Receive Note</div>
-                        <div className="text-[18px] font-bold text-[#18181b]">#{header.grnNo || "—"}</div>
-                        <div className="mt-3 space-y-1">
-                          {[["Date", header.docDate], ["PO Ref", header.poRefNo], ["Term", header.displayTerm], ["Currency", header.currencyCode]].map(([k, v]) => (
-                            <div key={k} className="flex items-center justify-end gap-2 text-[12px]">
-                              <span className="text-[#a1a1aa]">{k}</span>
-                              <span className="font-medium text-[#3f3f46]">{v || "—"}</span>
-                            </div>
+                    </div>
+
+                    <div className="border-t border-[#f4f4f5] mb-6" />
+
+                    <div className="grid grid-cols-2 gap-6 mb-6">
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.4px] text-[#a1a1aa] mb-2">From</p>
+                        <p className="text-[13px] font-semibold text-[#18181b] mb-1">{taskData.draft.header.supplierName}</p>
+                        <p className="text-[12px] text-[#71717a]">Reg: {taskData.draft.header.supplierRegNo}</p>
+                        <p className="text-[12px] text-[#71717a]">Tax ID: {taskData.draft.header.supplierTaxId}</p>
+                        <div className="mt-1.5 space-y-px">
+                          {taskData.draft.header.supplierAddress.map((line, i) => (
+                            <p key={i} className="text-[12px] text-[#a1a1aa]">{line}</p>
                           ))}
                         </div>
                       </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-6 px-8 py-5 border-b border-[#f4f4f5]">
                       <div>
-                        <div className="text-[10px] font-semibold uppercase tracking-wider text-[#a1a1aa] mb-1.5">Received By</div>
-                        <div className="text-[13px] font-semibold text-[#18181b]">{taskData.draft.header.receivedBy}</div>
-                        {taskData.draft.header.receivedByAddress.map((line, i) => <div key={i} className="text-[12px] text-[#a1a1aa] mt-0.5">{line}</div>)}
-                      </div>
-                      <div>
-                        <div className="text-[10px] font-semibold uppercase tracking-wider text-[#a1a1aa] mb-1.5">Agent</div>
-                        <div className="text-[13px] font-semibold text-[#18181b]">{header.receivingAgent || "—"}</div>
-                        <div className="text-[10px] font-semibold uppercase tracking-wider text-[#a1a1aa] mb-1.5 mt-4">Description</div>
-                        <div className="text-[12px] text-[#3f3f46]">{taskData.draft.header.description}</div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.4px] text-[#a1a1aa] mb-2">Received By</p>
+                        <p className="text-[13px] font-semibold text-[#18181b] mb-1">{taskData.draft.header.receivedBy}</p>
+                        {taskData.draft.header.receivedByAddress.map((line, i) => (
+                          <p key={i} className="text-[12px] text-[#a1a1aa] mt-0.5">{line}</p>
+                        ))}
                       </div>
                     </div>
 
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-[11px] min-w-[560px]">
-                        <thead>
-                          <tr className="border-b border-[#f4f4f5]">
-                            {["Item Code", "Description", "QTY", "UOM", "Price", "Disc", "Amount"].map((h, i) => (
-                              <th key={h} className={`h-9 font-medium text-[#a1a1aa] py-2 ${i === 0 ? "text-left pl-8 pr-2 w-[130px]" : i === 1 ? "text-left px-2" : i === 2 ? "text-right px-2 w-[36px]" : i === 3 ? "text-center px-2 w-[44px]" : i === 6 ? "text-right pl-2 pr-8 w-[80px]" : "text-right px-2 w-[60px]"}`}>
-                                {h}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {rows.map(row => (
-                            <tr key={row.id} className="border-b border-[#fafafa] hover:bg-[#fafaf9] transition-colors">
-                              <td className="pl-8 pr-2 py-3 font-mono text-[11px] text-[#a1a1aa]">{row.itemCode || "—"}</td>
-                              <td className="px-2 py-3 text-[#3f3f46] max-w-[140px]"><div className="truncate">{row.description || "—"}</div></td>
-                              <td className="px-2 py-3 text-right text-[#3f3f46] tabular-nums">{row.qty}</td>
-                              <td className="px-2 py-3 text-center text-[#a1a1aa]">{row.uom}</td>
-                              <td className="px-2 py-3 text-right text-[#3f3f46] tabular-nums">{fmtAmt(row.unitPrice)}</td>
-                              <td className="px-2 py-3 text-right text-[#a1a1aa]">{row.discount || "—"}</td>
-                              <td className="pl-2 pr-8 py-3 text-right font-semibold text-[#18181b] tabular-nums">{fmtAmt(row.amount)}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div className="grid grid-cols-4 gap-4 border-t border-b border-[#f4f4f5] py-4 mb-7">
+                      {([
+                        ["Date", header.docDate || "—"],
+                        ["PO Ref", header.poRefNo || "—"],
+                        ["Term", header.displayTerm],
+                        ["Agent", header.receivingAgent || "—"],
+                      ] as const).map(([k, v]) => (
+                        <div key={k}>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.4px] text-[#a1a1aa] mb-1">{k}</p>
+                          <p className="text-[13px] font-medium text-[#18181b]">{v}</p>
+                        </div>
+                      ))}
                     </div>
 
-                    <div className="px-8 py-6 border-t border-[#f4f4f5]">
-                      <div className="flex items-start justify-between gap-8">
-                        <div className="flex-1 max-w-xs">
-                          <div className="text-[10px] font-semibold uppercase tracking-wider text-[#a1a1aa] mb-1.5">Notes</div>
-                          <p className="text-[12px] text-[#a1a1aa] leading-relaxed">{taskData.draft.header.notes}</p>
+                    <div className="mb-7">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.4px] text-[#a1a1aa] mb-3">Received Items</p>
+                      <div className="grid text-[11px] font-medium text-[#a1a1aa] border-b border-[#e4e4e7] pb-2"
+                        style={{ gridTemplateColumns: "minmax(80px,1.3fr) minmax(90px,2fr) 40px 72px 38px 76px" }}>
+                        <div>Code</div>
+                        <div className="pl-1">Description</div>
+                        <div className="text-right">Qty</div>
+                        <div className="text-right">Price</div>
+                        <div className="text-right">Disc</div>
+                        <div className="text-right">Amount</div>
+                      </div>
+                      {rows.map(row => (
+                        <div key={row.id}
+                          className="grid items-center border-b border-[#f4f4f5] py-2.5 hover:bg-[#fafafa] -mx-2 px-2 rounded-[4px] transition-colors duration-75"
+                          style={{ gridTemplateColumns: "minmax(80px,1.3fr) minmax(90px,2fr) 40px 72px 38px 76px" }}>
+                          <div className="font-mono text-[11px] text-[#71717a] truncate">{row.itemCode || "—"}</div>
+                          <div className="text-[12px] text-[#3f3f46] truncate pl-1">{row.description || "—"}</div>
+                          <div className="text-[12px] text-[#3f3f46] text-right tabular-nums">{row.qty}</div>
+                          <div className="text-[12px] text-[#3f3f46] text-right tabular-nums">{fmtAmt(row.unitPrice)}</div>
+                          <div className="text-[12px] text-[#a1a1aa] text-right">{row.discount ? `${row.discount}%` : "—"}</div>
+                          <div className="text-[12px] font-semibold text-[#18181b] text-right tabular-nums">{fmtAmt(row.amount)}</div>
                         </div>
-                        <div className="w-48 space-y-1.5 shrink-0">
-                          <div className="flex justify-between text-[12px]">
-                            <span className="text-[#a1a1aa]">Subtotal</span>
-                            <span className="font-medium text-[#3f3f46] tabular-nums">{header.currencyCode} {fmtAmt(total)}</span>
-                          </div>
-                          <div className="flex justify-between text-[12px]">
-                            <span className="text-[#a1a1aa]">Tax (6%)</span>
-                            <span className="font-medium text-[#3f3f46] tabular-nums">{header.currencyCode} {fmtAmt(total * 0.06)}</span>
-                          </div>
-                          <div className="flex justify-between text-[14px] font-bold pt-2 border-t border-[#e4e4e7]">
-                            <span className="text-[#18181b]">Total</span>
-                            <span className="text-[#18181b] tabular-nums">{header.currencyCode} {fmtAmt(total * 1.06)}</span>
-                          </div>
+                      ))}
+                    </div>
+
+                    <div className="flex justify-end mb-8">
+                      <div className="w-52 space-y-1.5">
+                        <div className="flex justify-between text-[13px]">
+                          <span className="text-[#71717a]">Subtotal</span>
+                          <span className="tabular-nums text-[#18181b]">{header.currencyCode} {fmtAmt(total)}</span>
+                        </div>
+                        <div className="flex justify-between text-[13px]">
+                          <span className="text-[#71717a]">Tax (6% SST)</span>
+                          <span className="tabular-nums text-[#18181b]">{header.currencyCode} {fmtAmt(total * 0.06)}</span>
+                        </div>
+                        <div className="flex justify-between items-baseline pt-2.5 border-t border-[#e4e4e7]">
+                          <span className="text-[13px] font-semibold text-[#18181b]">Total</span>
+                          <span className="text-[20px] font-bold tracking-[-0.4px] tabular-nums text-[#09090b] leading-none">
+                            {header.currencyCode} {fmtAmt(total * 1.06)}
+                          </span>
                         </div>
                       </div>
+                    </div>
+
+                    <div className="border-t border-[#f4f4f5] pt-5 pb-10">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.4px] text-[#a1a1aa] mb-2">Notes</p>
+                      <p className="text-[12px] text-[#a1a1aa] leading-relaxed">{taskData.draft.header.notes}</p>
                     </div>
                   </div>
                 )}
