@@ -5,12 +5,13 @@ import {
   AlertCircle,
   BadgeCheck,
   CalendarDays,
+  Check,
+  CheckCheck,
   CheckCircle2,
   ChevronRight,
   Circle,
   ClipboardCheck,
   Clock3,
-  Coins,
   Droplets,
   Hammer,
   Info,
@@ -28,6 +29,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import React, { useState, useMemo } from "react";
 
@@ -65,6 +67,7 @@ const AGENTS = [
   { name: "Kevin Ooi",     color: "#dc2626" },
   { name: "Priya Nair",    color: "#7c3aed" },
   { name: "Marcus Chong",  color: "#0369a1" },
+  { name: "Lim Wei Jian",  color: "#65a30d" },
 ];
 
 const CATEGORY_META: Record<string, { color: string; Icon: React.ElementType }> = {
@@ -141,6 +144,13 @@ export default function SettleCommissionPage() {
   const [agentSearch, setAgentSearch]     = useState("");
   const [selectedNos, setSelectedNos]     = useState<Set<string>>(new Set());
   const [settledState, setSettledState]   = useState(false);
+
+  const shouldReduceMotion = useReducedMotion();
+  const fu = (delay: number) => ({
+    initial:    { opacity: 0, y: shouldReduceMotion ? 0 : -14 },
+    animate:    { opacity: 1, y: 0 },
+    transition: { delay: shouldReduceMotion ? 0 : delay, duration: 0.32, ease: [0.22, 1, 0.36, 1] as const },
+  });
 
   const filteredAgents = useMemo(
     () => AGENTS.filter(a => a.name.toLowerCase().includes(agentSearch.toLowerCase())),
@@ -223,7 +233,7 @@ export default function SettleCommissionPage() {
         <div className="flex min-h-0 flex-1 overflow-hidden">
 
           {/* ── Col 1: Agent list ── */}
-          <div className="flex w-[220px] shrink-0 flex-col border-r border-[#e6e6e6] bg-[#fbfaf9]">
+          <motion.div {...fu(0.04)} className="flex w-[220px] shrink-0 flex-col border-r border-[#e6e6e6] bg-[#fbfaf9]">
 
             {/* Search */}
             <div className="flex h-[var(--dashboard-toolbar-h)] shrink-0 items-center border-b border-[#e6e6e6] px-2.5">
@@ -244,14 +254,17 @@ export default function SettleCommissionPage() {
               {filteredAgents.length === 0 ? (
                 <p className="px-3 py-6 text-center text-[12px] text-[#b8b4af]">No technician found</p>
               ) : (
-                filteredAgents.map(agent => {
+                filteredAgents.map((agent, idx) => {
                   const stats    = getAgentStats(agent.name);
                   const isActive = selectedAgent === agent.name;
                   return (
-                    <button
+                    <motion.button
                       key={agent.name}
                       type="button"
                       onClick={() => selectAgent(agent.name)}
+                      initial={{ opacity: 0, x: shouldReduceMotion ? 0 : -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: shouldReduceMotion ? 0 : idx * 0.05, duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
                       className={`flex w-full items-center gap-2.5 px-3 py-2 text-left outline-none transition-colors duration-75 ${
                         isActive ? "bg-white" : "hover:bg-[#f1f0ee]"
                       }`}
@@ -291,16 +304,16 @@ export default function SettleCommissionPage() {
                           {stats.unsettledCount}
                         </span>
                       )}
-                    </button>
+                    </motion.button>
                   );
                 })
               )}
             </div>
 
-          </div>
+          </motion.div>
 
           {/* ── Col 2: Job table ── */}
-          <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          <motion.div {...fu(0.10)} className="flex min-w-0 flex-1 flex-col overflow-hidden">
 
             {/* Subheader */}
             <div className="flex h-[var(--dashboard-toolbar-h)] shrink-0 items-center gap-2 border-b border-[#e6e6e6] bg-white px-5">
@@ -329,34 +342,58 @@ export default function SettleCommissionPage() {
             {/* Table */}
             <div className="flex-1 overflow-y-auto">
               {agentJobs.length === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-2 py-20">
-                  <span className="text-[13px] text-[#b8b4af]">No jobs for this technician</span>
+                <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
+                  <div className="relative size-[52px]">
+                    <div className="size-full rounded-full border-2 border-dashed border-[#d1d5db]" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Wrench size={16} strokeWidth={1.8} className="text-[#9ca3af]" aria-hidden="true" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-[13px] font-medium text-[#374151]">No jobs assigned</p>
+                    <p className="mt-1 text-[12px] leading-relaxed text-[#9ca3af]">This technician has no<br />job orders yet</p>
+                  </div>
                 </div>
               ) : (
                 <table className="w-full min-w-[540px] border-separate border-spacing-0">
                   <thead className="sticky top-0 z-10 bg-white">
                     <tr>
-                      {(
-                        [
-                          { label: "Job No",           cls: "pl-5 pr-3 w-[140px]" },
-                          { label: "Service Date",     cls: "px-3 w-[145px]"      },
-                          { label: "Service Category", cls: "px-3"                },
-                          { label: "Status",           cls: "px-3 w-[124px]"      },
-                          { label: "Commission",       cls: "px-3 w-[116px]"      },
-                          { label: "",                 cls: "pl-3 pr-5 w-[48px]"  },
-                        ] as const
-                      ).map((col, i) => (
-                        <th
-                          key={col.label || `th-${i}`}
-                          className={`h-[var(--dashboard-head-h)] border-b border-[#e6e6e6] text-left text-[11px] font-semibold uppercase tracking-[0.3px] text-[#a8a49f] ${col.cls}`}
-                        >
-                          {col.label}
+                      {(["Job No","Service Date","Service Category","Status","Commission"] as const).map((label, i) => (
+                        <th key={label} className={`h-[var(--dashboard-head-h)] border-b border-[#e6e6e6] text-left text-[11px] font-semibold uppercase tracking-[0.3px] text-[#a8a49f] ${["pl-5 pr-3 w-[140px]","px-3 w-[145px]","px-3","px-3 w-[124px]","px-3 w-[116px]"][i]}`}>
+                          {label}
                         </th>
                       ))}
+                      <th className="h-[var(--dashboard-head-h)] border-b border-[#e6e6e6] pl-3 pr-5 w-[48px]">
+                        {(() => {
+                          const settleable = agentJobs.filter(isSettleable);
+                          const allSel  = settleable.length > 0 && settleable.every(j => selectedNos.has(j.jobNo));
+                          const someSel = !allSel && settleable.some(j => selectedNos.has(j.jobNo));
+                          function toggleAll() {
+                            if (allSel) setSelectedNos(new Set());
+                            else setSelectedNos(prev => new Set([...prev, ...settleable.map(j => j.jobNo)]));
+                          }
+                          return settleable.length > 0 ? (
+                            <button
+                              type="button"
+                              onClick={toggleAll}
+                              aria-label={allSel ? "Deselect all" : "Select all"}
+                              className={`inline-flex size-[20px] items-center justify-center rounded-[5px] outline-none transition-all duration-75 ${
+                                allSel || someSel
+                                  ? "bg-[#2383e2] text-white hover:bg-[#1a73d4]"
+                                  : "border border-[#e0deda] text-[#9b9a97] hover:border-[#2383e2] hover:bg-[#f0f7ff] hover:text-[#2383e2]"
+                              }`}
+                            >
+                              {allSel || someSel
+                                ? <Minus size={10} strokeWidth={2} aria-hidden="true" />
+                                : <Plus  size={10} strokeWidth={2} aria-hidden="true" />}
+                            </button>
+                          ) : null;
+                        })()}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {agentJobs.map(job => {
+                    {agentJobs.map((job, rowIdx) => {
                       const catMeta    = CATEGORY_META[job.serviceCategory] ?? { color: "#615d59", Icon: Wrench };
                       const CatIcon    = catMeta.Icon;
                       const settleable = isSettleable(job);
@@ -364,8 +401,11 @@ export default function SettleCommissionPage() {
                       const dim        = !settleable && !sel;
 
                       return (
-                        <tr
+                        <motion.tr
                           key={job.jobNo}
+                          initial={{ opacity: 0, x: shouldReduceMotion ? 0 : -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: shouldReduceMotion ? 0 : rowIdx * 0.05, duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
                           className={`h-[var(--dashboard-row-h)] transition-colors duration-75 ${
                             sel  ? "bg-[#f0f7ff]"
                             : dim ? "bg-white opacity-40"
@@ -401,19 +441,19 @@ export default function SettleCommissionPage() {
                                 type="button"
                                 onClick={() => toggleJob(job.jobNo)}
                                 aria-label={sel ? `Remove ${job.jobNo}` : `Add ${job.jobNo}`}
-                                className={`inline-flex size-[26px] items-center justify-center rounded-[6px] outline-none transition-all duration-75 ${
+                                className={`inline-flex size-[20px] items-center justify-center rounded-[5px] outline-none transition-all duration-75 ${
                                   sel
                                     ? "bg-[#2383e2] text-white hover:bg-[#1a73d4]"
                                     : "border border-[#e0deda] text-[#9b9a97] hover:border-[#2383e2] hover:bg-[#f0f7ff] hover:text-[#2383e2]"
                                 }`}
                               >
                                 {sel
-                                  ? <Minus size={12} strokeWidth={2.4} aria-hidden="true" />
-                                  : <Plus  size={12} strokeWidth={2.4} aria-hidden="true" />}
+                                  ? <Minus size={10} strokeWidth={2} aria-hidden="true" />
+                                  : <Plus  size={10} strokeWidth={2} aria-hidden="true" />}
                               </button>
                             )}
                           </td>
-                        </tr>
+                        </motion.tr>
                       );
                     })}
                   </tbody>
@@ -421,10 +461,10 @@ export default function SettleCommissionPage() {
               )}
             </div>
 
-          </div>
+          </motion.div>
 
           {/* ── Col 3: Settlement panel ── */}
-          <div className="flex w-[260px] shrink-0 flex-col border-l border-[#e6e6e6] bg-[#fbfaf9]">
+          <motion.div {...fu(0.16)} className="flex w-[260px] shrink-0 flex-col border-l border-[#e6e6e6] bg-[#fbfaf9]">
 
             {/* Panel header */}
             <div className="flex h-[var(--dashboard-toolbar-h)] shrink-0 items-center justify-between border-b border-[#e6e6e6] px-4">
@@ -452,7 +492,7 @@ export default function SettleCommissionPage() {
               {selectedJobs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center gap-3 py-12">
                   <div className="flex size-10 items-center justify-center rounded-full bg-[#f1f0ee]">
-                    <Coins size={18} strokeWidth={1.4} className="text-[#c4c2be]" aria-hidden="true" />
+                    <CheckCheck size={18} strokeWidth={1.4} className="text-[#c4c2be]" aria-hidden="true" />
                   </div>
                   <p className="text-center text-[12px] leading-[18px] text-[#b8b4af]">
                     Add jobs from<br />the list to settle
@@ -527,14 +567,14 @@ export default function SettleCommissionPage() {
                   </>
                 ) : (
                   <>
-                    <Coins size={13} strokeWidth={1.8} aria-hidden="true" />
+                    <CheckCheck size={13} strokeWidth={1.8} aria-hidden="true" />
                     Settle Commission
                   </>
                 )}
               </button>
             </div>
 
-          </div>
+          </motion.div>
 
         </div>
       </div>

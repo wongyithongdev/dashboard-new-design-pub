@@ -98,6 +98,13 @@ body {
   --joborder-col-category: 180px;
   --joborder-col-commission: 130px;
   --joborder-col-action: 110px;
+  --cashbook-table-min-w: 1000px;
+  --cashbook-col-docno: 160px;
+  --cashbook-col-date: 150px;
+  --cashbook-col-payto: 300px;
+  --cashbook-col-status: 160px;
+  --cashbook-col-amount: 150px;
+  --cashbook-col-action: 80px;
 }
 
 @media (min-width: 1681px) and (max-width: 1920px) and (hover: hover) and (pointer: fine) {
@@ -174,6 +181,13 @@ body {
     --joborder-col-category: 168px;
     --joborder-col-commission: 118px;
     --joborder-col-action: 98px;
+    --cashbook-table-min-w: 916px;
+    --cashbook-col-docno: 148px;
+    --cashbook-col-date: 140px;
+    --cashbook-col-payto: 274px;
+    --cashbook-col-status: 148px;
+    --cashbook-col-amount: 140px;
+    --cashbook-col-action: 76px;
   }
 }
 
@@ -244,6 +258,13 @@ body {
     --joborder-col-category: 152px;
     --joborder-col-commission: 108px;
     --joborder-col-action: 86px;
+    --cashbook-table-min-w: 822px;
+    --cashbook-col-docno: 132px;
+    --cashbook-col-date: 124px;
+    --cashbook-col-payto: 246px;
+    --cashbook-col-status: 132px;
+    --cashbook-col-amount: 124px;
+    --cashbook-col-action: 70px;
   }
 }
 
@@ -314,6 +335,13 @@ body {
     --joborder-col-category: 138px;
     --joborder-col-commission: 96px;
     --joborder-col-action: 80px;
+    --cashbook-table-min-w: 748px;
+    --cashbook-col-docno: 120px;
+    --cashbook-col-date: 112px;
+    --cashbook-col-payto: 222px;
+    --cashbook-col-status: 120px;
+    --cashbook-col-amount: 112px;
+    --cashbook-col-action: 64px;
   }
 }
 
@@ -384,6 +412,13 @@ body {
     --joborder-col-category: 138px;
     --joborder-col-commission: 96px;
     --joborder-col-action: 80px;
+    --cashbook-table-min-w: 748px;
+    --cashbook-col-docno: 120px;
+    --cashbook-col-date: 112px;
+    --cashbook-col-payto: 222px;
+    --cashbook-col-status: 120px;
+    --cashbook-col-amount: 112px;
+    --cashbook-col-action: 64px;
   }
 }
 
@@ -453,6 +488,13 @@ body {
     --joborder-col-category: 152px;
     --joborder-col-commission: 108px;
     --joborder-col-action: 86px;
+    --cashbook-table-min-w: 822px;
+    --cashbook-col-docno: 132px;
+    --cashbook-col-date: 124px;
+    --cashbook-col-payto: 246px;
+    --cashbook-col-status: 132px;
+    --cashbook-col-amount: 124px;
+    --cashbook-col-action: 70px;
   }
 }
 
@@ -522,6 +564,13 @@ body {
     --joborder-col-category: 122px;
     --joborder-col-commission: 84px;
     --joborder-col-action: 68px;
+    --cashbook-table-min-w: 662px;
+    --cashbook-col-docno: 106px;
+    --cashbook-col-date: 100px;
+    --cashbook-col-payto: 196px;
+    --cashbook-col-status: 106px;
+    --cashbook-col-amount: 100px;
+    --cashbook-col-action: 56px;
   }
 }
 
@@ -590,6 +639,13 @@ body {
     --joborder-col-category: 114px;
     --joborder-col-commission: 76px;
     --joborder-col-action: 60px;
+    --cashbook-table-min-w: 604px;
+    --cashbook-col-docno: 96px;
+    --cashbook-col-date: 92px;
+    --cashbook-col-payto: 178px;
+    --cashbook-col-status: 96px;
+    --cashbook-col-amount: 92px;
+    --cashbook-col-action: 52px;
   }
 }
 

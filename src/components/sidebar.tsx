@@ -140,6 +140,8 @@ type SidebarItemId = (typeof sidebarSections)[number]["items"][number]["id"];
 type BookItemId = (typeof bookItems)[number]["id"];
 
 const sidebarItemHrefs: Partial<Record<SidebarItemId, string>> = {
+  cashbook: "/cashbook",
+  "cashflow-report": "/cashflow-report",
   "purchase-invoice": "/purchase-invoice",
   "ap-invoice": "/apinvoice",
   "ap-payment": "/appayment",
@@ -256,7 +258,7 @@ export function DashboardSidebar({
         ) : null}
       </AnimatePresence>
       <aside
-        className={`bg-[#f7f7f8] shadow-[inset_-1px_0_0_rgba(0,0,0,0.055)] fixed inset-y-0 left-0 z-50 w-[280px] overflow-x-hidden overflow-y-auto xl:relative xl:inset-auto xl:z-auto xl:h-screen xl:w-[var(--dashboard-sidebar-w)] xl:shrink-0 xl:overflow-hidden xl:translate-x-0 xl:shadow-[inset_-1px_0_0_rgba(0,0,0,0.055)] ${
+        className={`[&_a]:cursor-default [&_button]:cursor-default bg-[#f7f7f8] shadow-[inset_-1px_0_0_rgba(0,0,0,0.055)] fixed inset-y-0 left-0 z-50 w-[280px] overflow-x-hidden overflow-y-auto xl:relative xl:inset-auto xl:z-auto xl:h-screen xl:w-[var(--dashboard-sidebar-w)] xl:shrink-0 xl:overflow-hidden xl:translate-x-0 xl:shadow-[inset_-1px_0_0_rgba(0,0,0,0.055)] ${
           shouldReduceMotion
             ? isMobileOpen ? "translate-x-0" : "-translate-x-full"
             : "transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] " + (isMobileOpen ? "translate-x-0" : "-translate-x-full")

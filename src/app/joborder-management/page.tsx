@@ -105,6 +105,16 @@ const statusOptions = [
   { key: "Cancelled",   label: "Cancelled",      helper: "Cancelled job"         },
 ] as const;
 
+const agentOptions = [
+  { key: "all",           label: "All agents",    color: "#d1d0ce" },
+  { key: "Ahmad Farid",   label: "Ahmad Farid",   color: "#0891b2" },
+  { key: "Wong Yi Thong", label: "Wong Yi Thong", color: "#1a73e8" },
+  { key: "Raj Kumar",     label: "Raj Kumar",     color: "#7c3aed" },
+  { key: "Sarah Lim",     label: "Sarah Lim",     color: "#db2777" },
+] as const;
+
+type AgentFilter = (typeof agentOptions)[number]["key"];
+
 const defaultSortDirections: Record<SortKey, SortDirection> = {
   serviceDate: "desc", customer: "asc", jobNo: "desc",
   agent: "asc", status: "desc", serviceCategory: "asc", commision: "desc",
@@ -459,19 +469,24 @@ export default function JobOrderManagementPage() {
   const [isSidebarOpen, setIsSidebarOpen]       = useState(false);
   const [isSortMenuOpen, setIsSortMenuOpen]     = useState(false);
   const [isStatusMenuOpen, setIsStatusMenuOpen] = useState(false);
+  const [isAgentMenuOpen, setIsAgentMenuOpen]   = useState(false);
   const [showQrModal, setShowQrModal]           = useState(false);
   const [sortKey, setSortKey]                   = useState<SortKey>("serviceDate");
   const [sortDirection, setSortDirection]       = useState<SortDirection>("desc");
   const [statusFilter, setStatusFilter]         = useState<StatusFilter>("all");
+  const [agentFilter, setAgentFilter]           = useState<AgentFilter>("all");
   const sortMenuRef   = useRef<HTMLDivElement>(null);
   const statusMenuRef = useRef<HTMLDivElement>(null);
+  const agentMenuRef  = useRef<HTMLDivElement>(null);
   const shouldReduceMotion = useReducedMotion();
 
   const currentSortOption   = sortOptions.find(o => o.key === sortKey);
   const currentStatusOption = statusOptions.find(o => o.key === statusFilter);
+  const currentAgentOption  = agentOptions.find(o => o.key === agentFilter);
 
   const sortedOrders = [...jobOrders]
     .filter(o => statusFilter === "all" ? true : o.status === statusFilter)
+    .filter(o => agentFilter  === "all" ? true : o.agent  === agentFilter)
     .sort((a, b) => {
       const av = getSortValue(a, sortKey);
       const bv = getSortValue(b, sortKey);
@@ -492,6 +507,7 @@ export default function JobOrderManagementPage() {
       const t = e.target as Node;
       if (!sortMenuRef.current?.contains(t))   setIsSortMenuOpen(false);
       if (!statusMenuRef.current?.contains(t)) setIsStatusMenuOpen(false);
+      if (!agentMenuRef.current?.contains(t))  setIsAgentMenuOpen(false);
 
     }
     document.addEventListener("pointerdown", onPointerDown);
@@ -660,6 +676,60 @@ export default function JobOrderManagementPage() {
                           </span>
                         </span>
                         {statusFilter === option.key && <Check size={13} strokeWidth={2} aria-hidden="true" className="shrink-0 text-[#0075de]" />}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Agent filter */}
+            <div ref={agentMenuRef} className="relative">
+              <button
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded={isAgentMenuOpen}
+                onClick={() => setIsAgentMenuOpen(o => !o)}
+                className="inline-flex h-8 items-center gap-1.5 rounded-[7px] border border-[#e6e6e6] bg-white px-3 text-[14px] font-medium leading-5 text-[#2c2c2b] outline-none transition-colors duration-75 hover:bg-[#f7f7f8] focus-visible:ring-1 focus-visible:ring-black/5"
+              >
+                <UserRound size={13} strokeWidth={1.8} aria-hidden="true" />
+                Agent
+                {agentFilter !== "all" && currentAgentOption && (
+                  <>
+                    <span className="text-[#a39e98]">is</span>
+                    <span
+                      className="inline-flex items-center gap-1 rounded-[5px] px-1.5 text-[12px] font-medium"
+                      style={{ background: currentAgentOption.color + "22", color: currentAgentOption.color }}
+                    >
+                      <span className="size-1.5 rounded-full" style={{ background: currentAgentOption.color }} />
+                      {currentAgentOption.label}
+                    </span>
+                  </>
+                )}
+              </button>
+              <AnimatePresence>
+                {isAgentMenuOpen && (
+                  <motion.div
+                    role="menu"
+                    className="absolute left-0 top-8 z-20 w-[192px] origin-top-left rounded-[10px] border border-[#e6e6e6] bg-white p-1 shadow-[0_12px_28px_rgba(15,15,15,0.11)]"
+                    initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
+                    transition={{ duration: shouldReduceMotion ? 0 : 0.16, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    {agentOptions.map(option => (
+                      <button
+                        key={option.key}
+                        type="button"
+                        role="menuitem"
+                        onClick={() => { setAgentFilter(option.key); setIsAgentMenuOpen(false); }}
+                        className="flex min-h-9 w-full items-center justify-between gap-3 rounded-[7px] px-2 text-left outline-none transition-colors duration-75 hover:bg-[#f6f5f4] focus-visible:bg-[#f6f5f4]"
+                      >
+                        <span className="flex min-w-0 items-center gap-2">
+                          <span className="size-2 shrink-0 rounded-full" style={{ background: option.color }} />
+                          <span className="truncate text-[13px] font-medium leading-5 text-[#2c2c2b]">{option.label}</span>
+                        </span>
+                        {agentFilter === option.key && <Check size={13} strokeWidth={2} aria-hidden="true" className="shrink-0 text-[#0075de]" />}
                       </button>
                     ))}
                   </motion.div>
