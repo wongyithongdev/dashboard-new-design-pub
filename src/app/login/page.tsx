@@ -3,9 +3,25 @@
 import { Check, ChevronDown, Globe2 } from "lucide-react";
 import { motion } from "motion/react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { FormEvent, startTransition, useEffect, useRef, useState } from "react";
 
 const STORAGE_KEY = "dashboard-language";
+
+function consumeGoogleAuthError(): "failed" | "not_registered" | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const err = window.sessionStorage.getItem("google_auth_error");
+
+  if (err === "failed" || err === "not_registered") {
+    window.sessionStorage.removeItem("google_auth_error");
+    return err;
+  }
+
+  return null;
+}
 
 const languages = [
   {
@@ -38,9 +54,11 @@ const translations: Record<
     password: string;
     passwordPlaceholder: string;
     passwordRequired: string;
+    passwordInvalid: string;
     mfa: string;
     mfaPlaceholder: string;
     mfaRequired: string;
+    mfaInvalid: string;
     continue: string;
     continuing: string;
     divider: string;
@@ -50,6 +68,8 @@ const translations: Record<
     termsJoin: string;
     privacy: string;
     language: string;
+    googleError: string;
+    googleNotRegistered: string;
   }
 > = {
   "en-US": {
@@ -63,9 +83,11 @@ const translations: Record<
     password: "Password",
     passwordPlaceholder: "Enter your password",
     passwordRequired: "Enter your password",
+    passwordInvalid: "Incorrect email or password",
     mfa: "MFA code",
     mfaPlaceholder: "Enter verification code",
     mfaRequired: "Enter the 6-digit MFA code",
+    mfaInvalid: "Incorrect verification code",
     continue: "Continue",
     continuing: "Continuing",
     divider: "or continue with",
@@ -76,6 +98,8 @@ const translations: Record<
     termsJoin: "and",
     privacy: "Privacy Policy",
     language: "Language:",
+    googleError: "Google sign-in failed. Please try again.",
+    googleNotRegistered: "This Google account is not registered. Please contact your administrator for an invite.",
   },
   "zh-SG": {
     title: "\u4f60\u7684 AI \u5de5\u4f5c\u7a7a\u95f4\u3002",
@@ -89,9 +113,11 @@ const translations: Record<
     password: "\u5bc6\u7801",
     passwordPlaceholder: "\u8f93\u5165\u4f60\u7684\u5bc6\u7801",
     passwordRequired: "\u8bf7\u8f93\u5165\u5bc6\u7801",
+    passwordInvalid: "\u90ae\u7bb1\u6216\u5bc6\u7801\u4e0d\u6b63\u786e",
     mfa: "MFA \u9a8c\u8bc1\u7801",
     mfaPlaceholder: "\u8f93\u5165\u9a8c\u8bc1\u7801",
     mfaRequired: "\u8bf7\u8f93\u5165 6 \u4f4d MFA \u9a8c\u8bc1\u7801",
+    mfaInvalid: "\u9a8c\u8bc1\u7801\u4e0d\u6b63\u786e",
     continue: "\u7ee7\u7eed",
     continuing: "\u5904\u7406\u4e2d",
     divider: "\u6216\u4f7f\u7528\u4ee5\u4e0b\u65b9\u5f0f\u7ee7\u7eed",
@@ -102,6 +128,8 @@ const translations: Record<
     termsJoin: "\u548c",
     privacy: "\u9690\u79c1\u653f\u7b56",
     language: "\u8bed\u8a00:",
+    googleError: "Google \u767b\u5165\u5931\u8d25\uff0c\u8bf7\u91cd\u8bd5\u3002",
+    googleNotRegistered: "\u6b64 Google \u8d26\u53f7\u5c1a\u672a\u6ce8\u518c\uff0c\u8bf7\u8054\u7cfb\u7ba1\u7406\u5458\u83b7\u53d6\u9080\u8bf7\u3002",
   },
 };
 
@@ -115,9 +143,14 @@ function getStoredLanguage(): Language | null {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [googleError, setGoogleError] = useState<"failed" | "not_registered" | null>(
+    () => consumeGoogleAuthError(),
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -135,7 +168,7 @@ export default function Home() {
   const copy = translations[selectedLanguage.value];
   const isChinese = selectedLanguage.isChinese;
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmedEmail = email.trim();
     const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail);
@@ -150,7 +183,13 @@ export default function Home() {
       return;
     }
 
-    if (showPassword && password.trim().length === 0) {
+    if (!showPassword) {
+      setShowPassword(true);
+      window.requestAnimationFrame(() => passwordInputRef.current?.focus());
+      return;
+    }
+
+    if (password.trim().length === 0) {
       setPasswordError(copy.passwordRequired);
       window.requestAnimationFrame(() => passwordInputRef.current?.focus());
       return;
@@ -165,21 +204,66 @@ export default function Home() {
     setEmailError("");
     setPasswordError("");
     setMfaError("");
+    setAuthError("");
     setIsSubmitting(true);
-    window.setTimeout(() => {
-      setIsSubmitting(false);
 
-      if (!showPassword) {
-        setShowPassword(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: trimmedEmail,
+          password,
+          otp_code: showMfa ? mfaCode : "",
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        router.push(data.need_setup ? "/welcome" : "/purchase-invoice");
+        return;
+      }
+
+      const code: string = data?.error ?? "";
+
+      if (code === "mfa_required") {
+        if (!showMfa) {
+          setShowMfa(true);
+          window.requestAnimationFrame(() => mfaInputRef.current?.focus());
+        }
+        return;
+      }
+
+      if (code === "invalid_mfa_code") {
+        setMfaError(copy.mfaInvalid);
+        window.requestAnimationFrame(() => mfaInputRef.current?.focus());
+        return;
+      }
+
+      if (code === "invalid_credentials") {
+        setPasswordError(copy.passwordInvalid);
         window.requestAnimationFrame(() => passwordInputRef.current?.focus());
         return;
       }
 
-      if (!showMfa) {
-        setShowMfa(true);
-        window.requestAnimationFrame(() => mfaInputRef.current?.focus());
-      }
-    }, 650);
+      setAuthError("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  function handleGoogleLogin() {
+    const authBase =
+      process.env.NEXT_PUBLIC_AUTH_BASE_URL ?? "https://auth.my365biz.com/auth";
+    const params = new URLSearchParams({
+      client_id: "dev-app",
+      response_type: "code",
+      scope: "openid profile email",
+      redirect_uri: `${window.location.origin}/auth/callback`,
+      kc_idp_hint: "google",
+    });
+    window.location.href = `${authBase}/realms/dev/protocol/openid-connect/auth?${params}`;
   }
 
   function handleLanguageChange(language: Language) {
@@ -370,6 +454,12 @@ export default function Home() {
               />
             ) : null}
           </button>
+
+          {authError ? (
+            <p className="mt-3 text-center text-[13px] leading-5 text-[#d92d20]">
+              {authError}
+            </p>
+          ) : null}
         </form>
 
         <div className="mb-5 mt-6 flex items-center gap-3 text-sm text-[#a39e98]">
@@ -380,11 +470,26 @@ export default function Home() {
 
         <button
           type="button"
-          className="flex h-11 w-full items-center justify-center gap-3 rounded-[8px] border border-[#e6e6e6] bg-white px-5 text-[15px] font-medium text-[#000000] shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition hover:border-[#e6e6e6] hover:bg-[#f6f5f4] focus:outline-none focus:ring-4 focus:ring-[#62aef0]/20"
+          onClick={() => { setGoogleError(null); handleGoogleLogin(); }}
+          className={`flex h-11 w-full items-center justify-center gap-3 rounded-[8px] border bg-white px-5 text-[15px] font-medium text-[#000000] shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition hover:bg-[#f6f5f4] focus:outline-none focus:ring-4 ${
+            googleError
+              ? "border-[#d92d20] focus:ring-[#d92d20]/20 hover:border-[#d92d20]"
+              : "border-[#e6e6e6] focus:ring-[#62aef0]/20 hover:border-[#e6e6e6]"
+          }`}
         >
           <Image src="/google.svg" alt="" width={20} height={20} />
           <span>{copy.google}</span>
         </button>
+
+        {googleError === "not_registered" ? (
+          <p className="mt-2 text-center text-[13px] leading-5 text-[#d92d20]">
+            {copy.googleNotRegistered}
+          </p>
+        ) : googleError === "failed" ? (
+          <p className="mt-2 text-center text-[13px] leading-5 text-[#d92d20]">
+            {copy.googleError}
+          </p>
+        ) : null}
 
         <p className="mt-5 text-center text-[12px] leading-5 text-[#a39e98]">
           {copy.termsPrefix}{" "}

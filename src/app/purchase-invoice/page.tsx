@@ -1,6 +1,7 @@
 "use client";
 
 import { DashboardSidebar } from "@/components/sidebar";
+import { apiFetch } from "@/lib/api";
 import {
   AlertCircle,
   ArrowUpDown,
@@ -62,91 +63,110 @@ import {
   Zap,
 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
-const purchaseInvoices = [
-  {
-    invoiceNo: "PI-2026-0001", supplierInvoiceNo: "SUP-INV-8291", creditorCode: "400-C001",
-    supplier: "OfficePro Supplies", date: "08 Jun 2026", agent: "Wong Yi Thong",
-    paymentStatus: "Unpaid", amount: "RM 1,240.00", outstandingAmount: "RM 1,240.00", currency: "MYR",
-    details: [
-      { itemCode: "OPS-001", description: "A4 Paper Ream 80gsm", uom: "BOX", qty: 10, unitPrice: 85.00, amount: 850.00 },
-      { itemCode: "OPS-002", description: "Ballpoint Pen Assorted", uom: "BOX", qty: 5, unitPrice: 12.00, amount: 60.00 },
-      { itemCode: "OPS-003", description: "Stapler Heavy Duty", uom: "PCS", qty: 2, unitPrice: 165.00, amount: 330.00 },
-    ],
-  },
-  {
-    invoiceNo: "PI-2026-0002", supplierInvoiceNo: "MP-2401-77", creditorCode: "400-C002",
-    supplier: "Metro Paper Trading", date: "07 Jun 2026", agent: "Amelia Tan",
-    paymentStatus: "Partial", amount: "RM 856.30", outstandingAmount: "RM 428.15", currency: "MYR",
-    details: [
-      { itemCode: "MPT-014", description: "Carbonless Paper NCR A4", uom: "PCS", qty: 200, unitPrice: 0.95, amount: 190.00 },
-      { itemCode: "MPT-031", description: "Thermal Roll 80mm x 80m", uom: "CTN", qty: 3, unitPrice: 88.00, amount: 264.00 },
-      { itemCode: "MPT-055", description: "Glossy Photo Paper 200gsm", uom: "PKT", qty: 4, unitPrice: 50.58, amount: 202.30 },
-    ],
-  },
-  {
-    invoiceNo: "PI-2026-0003", supplierInvoiceNo: "NSL-00984", creditorCode: "400-C003",
-    supplier: "Northstar Logistics", date: "06 Jun 2026", agent: "Daniel Lim",
-    paymentStatus: "Paid", amount: "RM 3,420.00", outstandingAmount: "RM 0.00", currency: "MYR",
-    details: [
-      { itemCode: "NSL-201", description: "Freight Charges — Peninsular", uom: "JOB", qty: 1, unitPrice: 1800.00, amount: 1800.00 },
-      { itemCode: "NSL-202", description: "Pallet Wrapping Service", uom: "PLT", qty: 12, unitPrice: 85.00, amount: 1020.00 },
-      { itemCode: "NSL-203", description: "Handling & Storage Fee", uom: "MTH", qty: 2, unitPrice: 300.00, amount: 600.00 },
-    ],
-  },
-  {
-    invoiceNo: "PI-2026-0004", supplierInvoiceNo: "BH-2026-511", creditorCode: "400-C004",
-    supplier: "Brightline Hardware", date: "05 Jun 2026", agent: "Rachel Koh",
-    paymentStatus: "Overdue", amount: "RM 612.90", outstandingAmount: "RM 612.90", currency: "MYR",
-    details: [
-      { itemCode: "BHW-088", description: "PVC Conduit Pipe 20mm x 4m", uom: "PCS", qty: 30, unitPrice: 4.50, amount: 135.00 },
-      { itemCode: "BHW-112", description: "Circuit Breaker 40A", uom: "PCS", qty: 3, unitPrice: 89.30, amount: 267.90 },
-      { itemCode: "BHW-145", description: "Junction Box IP65", uom: "PCS", qty: 10, unitPrice: 21.00, amount: 210.00 },
-    ],
-  },
-  {
-    invoiceNo: "PI-2026-0005", supplierInvoiceNo: "GPK-66120", creditorCode: "400-C005",
-    supplier: "Greenfield Packaging", date: "04 Jun 2026", agent: "Marcus Lee",
-    paymentStatus: "Unpaid", amount: "RM 2,105.45", outstandingAmount: "RM 2,105.45", currency: "MYR",
-    details: [
-      { itemCode: "GPK-301", description: "Corrugated Box 40x30x30cm", uom: "PCS", qty: 500, unitPrice: 1.85, amount: 925.00 },
-      { itemCode: "GPK-302", description: "Bubble Wrap Roll 1m x 50m", uom: "ROL", qty: 6, unitPrice: 78.00, amount: 468.00 },
-      { itemCode: "GPK-303", description: "Stretch Film 500mm x 300m", uom: "ROL", qty: 8, unitPrice: 89.43, amount: 715.45 },
-    ],
-  },
-  {
-    invoiceNo: "PI-2026-0006", supplierInvoiceNo: "AOS-1044", creditorCode: "400-C006",
-    supplier: "Apex Office Systems", date: "03 Jun 2026", agent: "Wong Yi Thong",
-    paymentStatus: "Paid", amount: "RM 498.00", outstandingAmount: "RM 0.00", currency: "MYR",
-    details: [
-      { itemCode: "AOS-011", description: "Toner Cartridge HP 85A", uom: "PCS", qty: 2, unitPrice: 149.00, amount: 298.00 },
-      { itemCode: "AOS-023", description: "Mouse Wireless Logitech", uom: "PCS", qty: 2, unitPrice: 65.00, amount: 130.00 },
-      { itemCode: "AOS-044", description: "USB Hub 4-Port 3.0", uom: "PCS", qty: 2, unitPrice: 35.00, amount: 70.00 },
-    ],
-  },
-  {
-    invoiceNo: "PI-2026-0007", supplierInvoiceNo: "SUM-2880", creditorCode: "400-C007",
-    supplier: "Summit Maintenance", date: "02 Jun 2026", agent: "Amelia Tan",
-    paymentStatus: "Partial", amount: "RM 1,780.20", outstandingAmount: "RM 890.10", currency: "MYR",
-    details: [
-      { itemCode: "SMT-101", description: "Air-Cond Servicing (Split Unit)", uom: "UNIT", qty: 6, unitPrice: 120.00, amount: 720.00 },
-      { itemCode: "SMT-102", description: "Water Filter Replacement", uom: "PCS", qty: 4, unitPrice: 85.05, amount: 340.20 },
-      { itemCode: "SMT-103", description: "General Cleaning Service", uom: "SVC", qty: 2, unitPrice: 360.00, amount: 720.00 },
-    ],
-  },
-  {
-    invoiceNo: "PI-2026-0008", supplierInvoiceNo: "ES-77214", creditorCode: "400-C008",
-    supplier: "Evermark Services", date: "01 Jun 2026", agent: "Daniel Lim",
-    paymentStatus: "Unpaid", amount: "RM 925.00", outstandingAmount: "RM 925.00", currency: "MYR",
-    details: [
-      { itemCode: "EVS-001", description: "Name Card Printing (500 pcs)", uom: "SET", qty: 2, unitPrice: 85.00, amount: 170.00 },
-      { itemCode: "EVS-012", description: "A3 Poster Printing Glossy", uom: "PCS", qty: 50, unitPrice: 4.50, amount: 225.00 },
-      { itemCode: "EVS-033", description: "Pull-Up Banner 85x200cm", uom: "PCS", qty: 2, unitPrice: 265.00, amount: 530.00 },
-    ],
-  },
-];
+type ApiPurchaseInvoiceStatus =
+  | "unpaid"
+  | "partial"
+  | "paid"
+  | "overdue"
+  | "cancelled";
 
+type PurchaseInvoiceLineItem = {
+  itemCode?: string | null;
+  description: string;
+  uom?: string | null;
+  qty: number;
+  unitPrice: number;
+  amount: number;
+  taxCode?: string | null;
+  accNo?: string | null;
+};
+
+type PurchaseInvoiceRecord = {
+  docKey?: string;
+  invoiceNo: string;
+  supplierInvoiceNo: string;
+  creditorCode: string;
+  supplier: string;
+  creditorType: string | null;
+  date: string;
+  dateValue: number;
+  agent: string;
+  paymentStatus: "Unpaid" | "Partial" | "Paid" | "Overdue" | "Cancelled";
+  paymentStatusKey: ApiPurchaseInvoiceStatus;
+  amount: string;
+  amountValue: number;
+  outstandingAmount: string;
+  outstandingAmountValue: number;
+  currency: string;
+  canPay: boolean;
+  details: PurchaseInvoiceLineItem[];
+};
+
+type PurchaseInvoiceListItem = {
+  docKey?: string;
+  invoiceNo?: string;
+  creditor?: string;
+  creditorType?: string | null;
+  date?: string;
+  agent?: string;
+  amount?: number;
+  status?: ApiPurchaseInvoiceStatus;
+  canPay?: boolean;
+};
+
+type PurchaseInvoiceListResponse = {
+  book_id?: string;
+  limit?: number;
+  offset?: number;
+  items?: PurchaseInvoiceListItem[];
+};
+
+type PurchaseInvoiceDetailResponse = {
+  success?: boolean;
+  header?: {
+    docKey?: string;
+    invoiceNo?: string;
+    supplierInvoiceNo?: string;
+    creditorCode?: string;
+    supplier?: string;
+    creditorType?: string | null;
+    agent?: string;
+    currency?: string;
+    date?: string;
+    grandTotal?: number;
+    amount?: number;
+    outstandingAmount?: number;
+    canCreateAPPayment?: boolean;
+  };
+  details?: PurchaseInvoiceLineItem[];
+};
+
+type AgentColorMap = Record<string, string>;
+
+const AGENT_COLOR_STORAGE_KEY = "purchase-invoice-agent-colors";
+const AGENT_COLOR_PALETTE = [
+  "#d93025",
+  "#1a73e8",
+  "#0f9d58",
+  "#f4511e",
+  "#7c3aed",
+  "#0891b2",
+  "#ca8a04",
+  "#be123c",
+  "#475569",
+] as const;
+const INVOICE_PAGE_SIZE = 40;
+const INVOICE_LOAD_MORE_THRESHOLD_PX = 240;
+const ROW_ANIMATION_DELAY_STEP_MS = 40;
+const ROW_ANIMATION_DURATION_MS = 240;
+const ROW_ANIMATION_MAX_DELAY_INDEX = 8;
+const ROW_ANIMATION_VISIBLE_LIMIT = 14;
+const ROW_ANIMATION_SETTLE_MS =
+  ROW_ANIMATION_DELAY_STEP_MS * ROW_ANIMATION_MAX_DELAY_INDEX +
+  ROW_ANIMATION_DURATION_MS +
+  140;
 const invoiceHistory = [
   {
     taskName: "Created purchase invoice",
@@ -203,10 +223,9 @@ const sortOptions = [
   { key: "paymentStatus", label: "Payment Status", helper: "Attention first" },
 ] as const;
 
-type PurchaseInvoice = (typeof purchaseInvoices)[number];
 type SortKey = (typeof sortOptions)[number]["key"];
 type SortDirection = "asc" | "desc";
-type StatusFilter = "all" | PurchaseInvoice["paymentStatus"];
+type StatusFilter = "all" | PurchaseInvoiceRecord["paymentStatus"];
 type ActiveTab = "invoices" | "history";
 type UploadDrawerMode = "upload" | "history";
 
@@ -216,6 +235,7 @@ const statusOptions = [
   { key: "Partial", label: "Partial", helper: "Some payment made" },
   { key: "Paid", label: "Paid", helper: "Completed payment" },
   { key: "Overdue", label: "Overdue", helper: "Past due date" },
+  { key: "Cancelled", label: "Cancelled", helper: "No payment allowed" },
 ] as const;
 
 const defaultSortDirections: Record<SortKey, SortDirection> = {
@@ -227,46 +247,217 @@ const defaultSortDirections: Record<SortKey, SortDirection> = {
   paymentStatus: "desc",
 };
 
-function parseAmount(amount: string) {
-  return Number(amount.replace(/[^\d.]/g, ""));
+const STATUS_LABELS: Record<ApiPurchaseInvoiceStatus, PurchaseInvoiceRecord["paymentStatus"]> = {
+  unpaid: "Unpaid",
+  partial: "Partial",
+  paid: "Paid",
+  overdue: "Overdue",
+  cancelled: "Cancelled",
+};
+
+function formatMoney(amount: number) {
+  return `RM ${amount.toLocaleString("en-MY", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
-function getSortValue(invoice: PurchaseInvoice, sortKey: SortKey) {
+function formatIsoDate(date: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+
+  if (!match) {
+    return date;
+  }
+
+  const [, year, month, day] = match;
+  const monthLabel =
+    [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ][Number(month) - 1] ?? month;
+
+  return `${day} ${monthLabel} ${year}`;
+}
+
+function getDateValue(date: string) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return new Date(`${date}T00:00:00`).getTime();
+  }
+
+  return new Date(date).getTime();
+}
+
+function mapApiItemToInvoiceRecord(
+  item: NonNullable<PurchaseInvoiceListResponse["items"]>[number],
+): PurchaseInvoiceRecord {
+  const statusKey = item.status ?? "unpaid";
+  const amountValue = typeof item.amount === "number" ? item.amount : 0;
+  const outstandingAmountValue = item.canPay ? amountValue : 0;
+
+  return {
+    docKey: item.docKey,
+    invoiceNo: item.invoiceNo ?? "-",
+    supplierInvoiceNo: "",
+    creditorCode: "",
+    supplier: item.creditor?.trim() || "Unknown supplier",
+    creditorType: item.creditorType ?? null,
+    date: formatIsoDate(item.date ?? ""),
+    dateValue: getDateValue(item.date ?? ""),
+    agent: item.agent?.trim() || "",
+    paymentStatus: STATUS_LABELS[statusKey],
+    paymentStatusKey: statusKey,
+    amount: formatMoney(amountValue),
+    amountValue,
+    outstandingAmount: formatMoney(outstandingAmountValue),
+    outstandingAmountValue,
+    currency: "MYR",
+    canPay: Boolean(item.canPay),
+    details: [],
+  };
+}
+
+function mergeInvoiceDetail(
+  invoice: PurchaseInvoiceRecord,
+  detail: PurchaseInvoiceDetailResponse,
+): PurchaseInvoiceRecord {
+  const header = detail.header;
+  const detailAmount = typeof header?.amount === "number" ? header.amount : invoice.amountValue;
+  const outstandingAmountValue =
+    typeof header?.outstandingAmount === "number"
+      ? header.outstandingAmount
+      : invoice.outstandingAmountValue;
+
+  return {
+    ...invoice,
+    docKey: header?.docKey ?? invoice.docKey,
+    invoiceNo: header?.invoiceNo ?? invoice.invoiceNo,
+    supplierInvoiceNo: header?.supplierInvoiceNo ?? invoice.supplierInvoiceNo,
+    creditorCode: header?.creditorCode ?? invoice.creditorCode,
+    supplier: header?.supplier ?? invoice.supplier,
+    creditorType: header?.creditorType ?? invoice.creditorType,
+    date: header?.date ? formatIsoDate(header.date) : invoice.date,
+    dateValue: header?.date ? getDateValue(header.date) : invoice.dateValue,
+    agent: header?.agent ?? invoice.agent,
+    amount: formatMoney(detailAmount),
+    amountValue: detailAmount,
+    outstandingAmount: formatMoney(outstandingAmountValue),
+    outstandingAmountValue,
+    currency: header?.currency ?? invoice.currency,
+    canPay:
+      typeof header?.canCreateAPPayment === "boolean"
+        ? header.canCreateAPPayment
+        : invoice.canPay,
+    details: Array.isArray(detail.details) ? detail.details : [],
+  };
+}
+
+function getSortValue(invoice: PurchaseInvoiceRecord, sortKey: SortKey) {
   if (sortKey === "amount") {
-    return parseAmount(invoice.amount);
+    return invoice.amountValue;
   }
 
   if (sortKey === "date") {
-    return new Date(invoice.date).getTime();
+    return invoice.dateValue;
   }
 
   if (sortKey === "paymentStatus") {
     return {
-      Overdue: 4,
+      Overdue: 5,
+      Partial: 4,
       Unpaid: 3,
-      Partial: 2,
-      Paid: 1,
+      Paid: 2,
+      Cancelled: 1,
     }[invoice.paymentStatus];
   }
 
   return invoice[sortKey];
 }
 
-function AgentPill({ name }: Readonly<{ name: string }>) {
+function getStoredAgentColorMap() {
+  if (typeof window === "undefined") {
+    return {};
+  }
+
+  try {
+    const rawValue = window.localStorage.getItem(AGENT_COLOR_STORAGE_KEY);
+    if (!rawValue) {
+      return {};
+    }
+
+    const parsed = JSON.parse(rawValue) as AgentColorMap;
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveAgentColorMap(agentColorMap: AgentColorMap) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(
+      AGENT_COLOR_STORAGE_KEY,
+      JSON.stringify(agentColorMap),
+    );
+  } catch {
+    // Ignore local storage write failures.
+  }
+}
+
+function assignAgentColors(
+  currentMap: AgentColorMap,
+  agentNames: string[],
+) {
+  const nextMap = { ...currentMap };
+  let nextColorIndex = Object.keys(nextMap).length;
+  let changed = false;
+
+  for (const rawName of agentNames) {
+    const name = rawName.trim();
+
+    if (!name || nextMap[name]) {
+      continue;
+    }
+
+    nextMap[name] = AGENT_COLOR_PALETTE[nextColorIndex % AGENT_COLOR_PALETTE.length];
+    nextColorIndex += 1;
+    changed = true;
+  }
+
+  return { changed, nextMap };
+}
+
+function getAgentColor(name: string, agentColorMap: AgentColorMap) {
+  return agentColorMap[name.trim()] ?? "#5f6368";
+}
+
+function AgentPill({
+  name,
+  avatarColor,
+}: Readonly<{ name: string; avatarColor: string }>) {
+  if (!name.trim()) {
+    return <span />;
+  }
+
   const initial = name.split(" ").filter(Boolean)[0]?.[0]?.toUpperCase() ?? "?";
-  const agentStyle =
-    {
-      "Wong Yi Thong": { avatar: "bg-[#1a73e8] text-white" },
-      "Amelia Tan": { avatar: "bg-[#d93025] text-white" },
-      "Daniel Lim": { avatar: "bg-[#0f9d58] text-white" },
-      "Rachel Koh": { avatar: "bg-[#f4511e] text-white" },
-      "Marcus Lee": { avatar: "bg-[#7c3aed] text-white" },
-    }[name] ?? { avatar: "bg-[#5f6368] text-white" };
 
   return (
     <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-[#f1f0ee] px-1.5 py-0.5 text-[14px] font-medium leading-5 text-[#5f5e59] max-xl:text-[13px]">
       <span
-        className={`flex size-4 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold ${agentStyle.avatar}`}
+        className="flex size-4 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold text-white"
+        style={{ backgroundColor: avatarColor }}
       >
         {initial}
       </span>
@@ -274,7 +465,6 @@ function AgentPill({ name }: Readonly<{ name: string }>) {
     </span>
   );
 }
-
 function InvoiceNumberCell({ invoiceNo }: Readonly<{ invoiceNo: string }>) {
   return (
     <span className="whitespace-nowrap text-[14px] font-medium leading-5 text-[#2c2c2b] max-xl:text-[13px]">
@@ -284,6 +474,37 @@ function InvoiceNumberCell({ invoiceNo }: Readonly<{ invoiceNo: string }>) {
 }
 
 type SupplierMeta = { color: string; Icon: React.ElementType };
+
+const supplierTypeMetaMap: Record<string, SupplierMeta> = {
+  "Accounting & Finance Services": { color: "#4b5563", Icon: Calculator },
+  "Agriculture & Farming": { color: "#65a30d", Icon: Wheat },
+  "Automotive & Transportation": { color: "#1d4ed8", Icon: Car },
+  "Banking, Finance & Insurance": { color: "#0f766e", Icon: Landmark },
+  "Chemical Industry": { color: "#9333ea", Icon: FlaskConical },
+  "Cleaning & Maintenance": { color: "#0891b2", Icon: Droplets },
+  "Construction & Engineering": { color: "#d97706", Icon: HardHat },
+  Default: { color: "#615d59", Icon: Store },
+  "Education & Training": { color: "#b45309", Icon: GraduationCap },
+  "Electronics & Semiconductors": { color: "#0284c7", Icon: Cpu },
+  "Energy & Utilities": { color: "#ca8a04", Icon: Flame },
+  "Environmental & Waste Management": { color: "#15803d", Icon: Recycle },
+  "Food & Beverage": { color: "#16a34a", Icon: Utensils },
+  "Furniture & Interior Design": { color: "#92400e", Icon: Sofa },
+  "Healthcare & Medical": { color: "#0891b2", Icon: HeartPulse },
+  "Import, Export & Trading": { color: "#0369a1", Icon: Globe },
+  "Legal & Consulting": { color: "#374151", Icon: Scale },
+  Manufacturing: { color: "#475569", Icon: Factory },
+  "Media & Entertainment": { color: "#9333ea", Icon: Film },
+  Normal: { color: "#615d59", Icon: Store },
+  "Publishing & Printing": { color: "#6d28d9", Icon: Newspaper },
+  "Real Estate & Property": { color: "#78350f", Icon: Building2 },
+  "Retail & Supermarket": { color: "#7c3aed", Icon: ShoppingCart },
+  "Security & Surveillance": { color: "#1e40af", Icon: Shield },
+  "Software & Technology": { color: "#6366f1", Icon: Code2 },
+  Telecommunications: { color: "#2563eb", Icon: Phone },
+  "Textile & Apparel": { color: "#db2777", Icon: Shirt },
+  "Travel & Hospitality": { color: "#0ea5e9", Icon: Plane },
+};
 
 const supplierMetaMap: Record<string, SupplierMeta> = {
   "OfficePro Supplies":   { color: "#dd5b00", Icon: Box },
@@ -326,16 +547,21 @@ const industryPatterns: Array<{ pattern: RegExp; meta: SupplierMeta }> = [
   { pattern: /publish|print|book\b|magazine|newspa|catalog|brochure|press/i,                                           meta: { color: "#6d28d9", Icon: Newspaper } },
 ];
 
-function resolveSupplierMeta(supplier: string): SupplierMeta {
-  if (supplierMetaMap[supplier]) return supplierMetaMap[supplier];
+function resolveSupplierMeta(creditorType?: string | null): SupplierMeta {
+  if (!creditorType) return supplierTypeMetaMap.Default;
+  if (supplierTypeMetaMap[creditorType]) return supplierTypeMetaMap[creditorType];
+  if (supplierMetaMap[creditorType]) return supplierMetaMap[creditorType];
   for (const { pattern, meta } of industryPatterns) {
-    if (pattern.test(supplier)) return meta;
+    if (pattern.test(creditorType)) return meta;
   }
   return { color: "#615d59", Icon: Store };
 }
 
-function SupplierCell({ supplier }: Readonly<{ supplier: string }>) {
-  const { color, Icon } = resolveSupplierMeta(supplier);
+function SupplierCell({
+  supplier,
+  creditorType,
+}: Readonly<{ supplier: string; creditorType?: string | null }>) {
+  const { color, Icon } = resolveSupplierMeta(creditorType);
 
   return (
     <span className="inline-flex max-w-full items-center gap-2">
@@ -388,6 +614,7 @@ function PaymentStatusPill({ status }: Readonly<{ status: string }>) {
       Partial: { pill: "bg-[#fff4db] text-[#9a6700]", Icon: Clock3 },
       Overdue: { pill: "bg-[#fdecec] text-[#c2410c]", Icon: AlertCircle },
       Unpaid:  { pill: "bg-[#f1f0ee] text-[#5f5e59]", Icon: Circle },
+      Cancelled: { pill: "bg-[#f3f4f6] text-[#6b7280]", Icon: X },
     }[status] ?? { pill: "bg-[#f1f0ee] text-[#5f5e59]", Icon: Circle };
 
   return (
@@ -443,6 +670,7 @@ function StatusFilterPill({ status }: Readonly<{ status: StatusFilter }>) {
       Partial: "bg-[#fff4db] text-[#9a6700]",
       Overdue: "bg-[#fdecec] text-[#c2410c]",
       Unpaid: "bg-[#f1f0ee] text-[#5f5e59]",
+      Cancelled: "bg-[#f3f4f6] text-[#6b7280]",
     }[status] ?? "bg-[#f1f0ee] text-[#5f5e59]";
 
   return (
@@ -453,7 +681,7 @@ function StatusFilterPill({ status }: Readonly<{ status: StatusFilter }>) {
 }
 
 function AmountPill({ amount }: Readonly<{ amount: string }>) {
-  const numericAmount = parseAmount(amount);
+  const numericAmount = Number(amount.replace(/[^\d.]/g, ""));
   const amountStyle =
     numericAmount >= 3000
       ? "bg-[#fdecec] text-[#a84422]"
@@ -470,13 +698,19 @@ function AmountPill({ amount }: Readonly<{ amount: string }>) {
   );
 }
 
-type InvoiceDetail = (typeof purchaseInvoices)[number]["details"][number];
+type InvoiceDetail = PurchaseInvoiceLineItem;
 
 function ViewInvoiceModal({
   invoice,
+  agentColor,
+  isLoading,
+  detailError,
   onClose,
 }: Readonly<{
-  invoice: (typeof purchaseInvoices)[number];
+  invoice: PurchaseInvoiceRecord;
+  agentColor: string;
+  isLoading: boolean;
+  detailError?: string;
   onClose: () => void;
 }>) {
   const shouldReduceMotion = useReducedMotion();
@@ -487,18 +721,12 @@ function ViewInvoiceModal({
       Partial: "bg-[#fff4db] text-[#9a6700]",
       Overdue: "bg-[#fdecec] text-[#c2410c]",
       Unpaid: "bg-[#f1f0ee] text-[#5f5e59]",
+      Cancelled: "bg-[#f3f4f6] text-[#6b7280]",
     }[invoice.paymentStatus] ?? "bg-[#f1f0ee] text-[#5f5e59]";
 
-  const { color: supplierChipColor, Icon: SupplierIcon } = resolveSupplierMeta(invoice.supplier);
-
-  const agentAvatarBg =
-    {
-      "Wong Yi Thong": "#1a73e8",
-      "Amelia Tan": "#d93025",
-      "Daniel Lim": "#0f9d58",
-      "Rachel Koh": "#f4511e",
-      "Marcus Lee": "#7c3aed",
-    }[invoice.agent] ?? "#5f6368";
+  const { color: supplierChipColor, Icon: SupplierIcon } = resolveSupplierMeta(
+    invoice.creditorType,
+  );
 
   const agentInitial =
     invoice.agent.split(" ").filter(Boolean)[0]?.[0]?.toUpperCase() ?? "?";
@@ -522,7 +750,6 @@ function ViewInvoiceModal({
 
   return (
     <div className="fixed inset-0 z-40 flex justify-end overflow-hidden">
-      {/* Backdrop — fades independently */}
       <motion.div
         className="absolute inset-0 bg-black/20 backdrop-blur-[2px]"
         initial={{ opacity: 0 }}
@@ -535,7 +762,6 @@ function ViewInvoiceModal({
         onClick={onClose}
       />
 
-      {/* Drawer — spring slides in from right, fully visible from frame 1 */}
       <motion.div
         className="relative z-10 flex h-full w-[var(--dashboard-drawer-w)] max-w-full transform-gpu flex-col bg-white shadow-[-16px_0_48px_rgba(15,15,15,0.08),_-2px_0_8px_rgba(15,15,15,0.04)]"
         initial={
@@ -555,9 +781,10 @@ function ViewInvoiceModal({
         }}
         style={{ transformOrigin: "right center", willChange: "transform, opacity, filter" }}
       >
-        {/* ── Section 1: Invoice ID + status + close ── */}
+        {detailError ? <p className="sr-only">{detailError}</p> : null}
+
         <div className="flex items-center justify-between gap-4 px-7 pt-6 pb-1">
-          <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex min-w-0 items-center gap-2.5">
             <h2 className="text-[20px] font-semibold leading-7 tracking-[-0.125px] text-[#2c2c2b]">
               {invoice.invoiceNo}
             </h2>
@@ -566,6 +793,11 @@ function ViewInvoiceModal({
             >
               {invoice.paymentStatus}
             </span>
+            {isLoading ? (
+              <span className="inline-flex h-[22px] shrink-0 items-center rounded-[5px] bg-[#eff6ff] px-2 text-[12px] font-semibold text-[#1d4ed8]">
+                Loading
+              </span>
+            ) : null}
           </div>
           <button
             type="button"
@@ -576,26 +808,78 @@ function ViewInvoiceModal({
           </button>
         </div>
 
-        {/* ── Section 2: Supplier identity ── */}
         <div className="px-7 pt-4 pb-5">
           <div className="flex items-center gap-3">
-            <span
-              className="flex size-11 shrink-0 items-center justify-center rounded-[10px] bg-[#f6f5f4]"
-            >
-              <SupplierIcon size={22} strokeWidth={1.75} aria-hidden="true" style={{ color: supplierChipColor }} />
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-[10px] bg-[#f6f5f4]">
+              <SupplierIcon
+                size={22}
+                strokeWidth={1.75}
+                aria-hidden="true"
+                style={{ color: supplierChipColor }}
+              />
             </span>
             <div className="min-w-0">
               <p className="text-[16px] font-semibold leading-6 text-[#2c2c2b]">
                 {invoice.supplier}
               </p>
-              <p className="mt-0.5 text-[13px] leading-5 text-[#a39e98]">
-                {invoice.creditorCode} · {invoice.currency}
-              </p>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                {invoice.creditorType ? (
+                  <span className="inline-flex h-6 items-center rounded-full bg-[#eff6ff] px-2.5 text-[12px] font-medium text-[#1d4ed8]">
+                    {invoice.creditorType}
+                  </span>
+                ) : null}
+                <p className="text-[13px] leading-5 text-[#a39e98]">
+                  {invoice.creditorCode || "No creditor code"} - {invoice.currency}
+                </p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* ── Section 3: Date + Agent ── */}
+        {detailError ? (
+          <div className="px-7 pb-4">
+            <div className="flex items-start gap-2 rounded-[10px] border border-[#fed7d7] bg-[#fff5f5] px-3 py-2.5 text-[13px] leading-5 text-[#c2410c]">
+              <AlertCircle size={15} strokeWidth={1.9} className="mt-0.5 shrink-0" />
+              <p>{detailError}</p>
+            </div>
+          </div>
+        ) : null}
+
+        <div className="grid grid-cols-2 gap-3 border-t border-[#e6e6e6] px-7 py-4">
+          {[
+            {
+              label: "Supplier Invoice",
+              value: invoice.supplierInvoiceNo || "Not available",
+              icon: Hash,
+            },
+            {
+              label: "Doc Key",
+              value: invoice.docKey || "Not available",
+              icon: FileText,
+            },
+            {
+              label: "Creditor Code",
+              value: invoice.creditorCode || "Not available",
+              icon: Building2,
+            },
+            {
+              label: "Currency",
+              value: invoice.currency || "MYR",
+              icon: Tag,
+            },
+          ].map(({ label, value, icon: Icon }) => (
+            <div key={label} className="rounded-[10px] border border-[#ece9e6] bg-[#faf9f8] px-3 py-2.5">
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.4px] text-[#a39e98]">
+                <Icon size={12} strokeWidth={1.9} className="shrink-0" />
+                {label}
+              </div>
+              <p className="mt-1 truncate text-[13px] font-medium text-[#31302e]">
+                {value}
+              </p>
+            </div>
+          ))}
+        </div>
+
         <div className="flex items-center gap-2 border-t border-[#e6e6e6] px-7 py-4">
           <span
             className="inline-flex h-7 items-center gap-1.5 rounded-[6px] px-2.5 text-[13px] font-medium"
@@ -612,7 +896,7 @@ function ViewInvoiceModal({
           <span className="inline-flex h-7 items-center gap-1.5 rounded-full bg-[#f1f0ee] pl-1.5 pr-3 text-[13px] font-medium text-[#5f5e59]">
             <span
               className="flex size-[18px] shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white"
-              style={{ background: agentAvatarBg }}
+              style={{ background: agentColor }}
             >
               {agentInitial}
             </span>
@@ -620,7 +904,6 @@ function ViewInvoiceModal({
           </span>
         </div>
 
-        {/* ── Section 4: Line items ── */}
         <div className="min-h-0 flex-1 overflow-auto border-t border-[#e6e6e6]">
           <div className="px-7 pt-4 pb-2">
             <p className="text-[11px] font-semibold uppercase tracking-[0.4px] text-[#a39e98]">
@@ -632,9 +915,13 @@ function ViewInvoiceModal({
               <tr>
                 {(
                   [
+                    { col: "Item", align: "left" },
                     { col: "Description", align: "left" },
+                    { col: "UOM", align: "left" },
                     { col: "Qty", align: "right" },
                     { col: "Unit Price", align: "right" },
+                    { col: "Tax", align: "left" },
+                    { col: "Account", align: "left" },
                     { col: "Amount", align: "right" },
                   ] as const
                 ).map(({ col, align }, i, arr) => {
@@ -654,29 +941,63 @@ function ViewInvoiceModal({
               </tr>
             </thead>
             <tbody>
-              {invoice.details.map((item: InvoiceDetail, idx: number) => (
-                <tr key={idx} className="transition-colors duration-75 hover:bg-[#f7f7f8]">
-                  <td className="border-b border-r border-[#f0efed] py-3 pl-7 pr-3 text-[14px] leading-5 text-[#31302e]">
-                    {item.description}
-                  </td>
-                  <td className="border-b border-r border-[#f0efed] px-3 py-3 text-right text-[14px] tabular-nums text-[#5f5e59]">
-                    {item.qty}
-                  </td>
-                  <td className="border-b border-r border-[#f0efed] px-3 py-3 text-right text-[14px] tabular-nums text-[#5f5e59]">
-                    {item.unitPrice.toFixed(2)}
-                  </td>
-                  <td className="border-b border-r border-[#f0efed] py-3 pl-3 pr-7 text-right text-[14px] font-medium tabular-nums text-[#31302e]">
-                    {item.amount.toFixed(2)}
+              {invoice.details.length > 0 ? (
+                invoice.details.map((item: InvoiceDetail, idx: number) => (
+                  <tr
+                    key={`${item.itemCode ?? "row"}-${idx}`}
+                    className="transition-colors duration-75 hover:bg-[#f7f7f8]"
+                  >
+                    <td className="border-b border-r border-[#f0efed] py-3 pl-7 pr-3 text-[13px] text-[#5f5e59]">
+                      {item.itemCode || "-"}
+                    </td>
+                    <td className="border-b border-r border-[#f0efed] px-3 py-3 text-[14px] leading-5 text-[#31302e]">
+                      {item.description}
+                    </td>
+                    <td className="border-b border-r border-[#f0efed] px-3 py-3 text-[13px] text-[#5f5e59]">
+                      {item.uom || "-"}
+                    </td>
+                    <td className="border-b border-r border-[#f0efed] px-3 py-3 text-right text-[14px] tabular-nums text-[#5f5e59]">
+                      {item.qty}
+                    </td>
+                    <td className="border-b border-r border-[#f0efed] px-3 py-3 text-right text-[14px] tabular-nums text-[#5f5e59]">
+                      {item.unitPrice.toFixed(2)}
+                    </td>
+                    <td className="border-b border-r border-[#f0efed] px-3 py-3 text-[13px] text-[#5f5e59]">
+                      {item.taxCode || "-"}
+                    </td>
+                    <td className="border-b border-r border-[#f0efed] px-3 py-3 text-[13px] text-[#5f5e59]">
+                      {item.accNo || "-"}
+                    </td>
+                    <td className="border-b border-[#f0efed] py-3 pl-3 pr-7 text-right text-[14px] font-medium tabular-nums text-[#31302e]">
+                      {item.amount.toFixed(2)}
+                    </td>
+                  </tr>
+                ))
+              ) : isLoading ? (
+                <tr>
+                  <td
+                    colSpan={8}
+                    className="border-b border-[#f0efed] px-7 py-6 text-center text-[14px] text-[#8f8983]"
+                  >
+                    Loading invoice details...
                   </td>
                 </tr>
-              ))}
+              ) : (
+                <tr>
+                  <td
+                    colSpan={8}
+                    className="border-b border-[#f0efed] px-7 py-6 text-center text-[14px] text-[#8f8983]"
+                  >
+                    Detail lines are unavailable for this invoice.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
 
-        {/* ── Section 5: Totals + action ── */}
         <div className="border-t border-[#e6e6e6] px-7 py-5">
-          <div className="flex items-end justify-between">
+          <div className="flex items-end justify-between gap-4">
             <div className="space-y-2">
               <div className="flex items-baseline gap-3">
                 <span className="w-[88px] text-[11px] font-semibold uppercase tracking-[0.4px] text-[#a39e98]">
@@ -692,7 +1013,7 @@ function ViewInvoiceModal({
                 </span>
                 <span
                   className={`text-[15px] font-semibold tabular-nums ${
-                    invoice.outstandingAmount === "RM 0.00"
+                    invoice.outstandingAmountValue <= 0
                       ? "text-[#1f7a4d]"
                       : "text-[#c2410c]"
                   }`}
@@ -701,22 +1022,21 @@ function ViewInvoiceModal({
                 </span>
               </div>
             </div>
-            {invoice.outstandingAmount !== "RM 0.00" && (
+            {invoice.canPay && invoice.outstandingAmountValue > 0 ? (
               <button
                 type="button"
-                className="inline-flex h-9 items-center rounded-[8px] bg-[#0075de] px-4 text-[14px] font-medium text-white shadow-[0_1px_2px_rgba(0,117,222,0.2)] outline-none transition-colors duration-75 hover:bg-[#005bab]"
+                disabled={isLoading}
+                className="inline-flex h-9 items-center rounded-[8px] bg-[#0075de] px-4 text-[14px] font-medium text-white shadow-[0_1px_2px_rgba(0,117,222,0.2)] outline-none transition-colors duration-75 hover:bg-[#005bab] disabled:cursor-not-allowed disabled:bg-[#9dc6ef] disabled:shadow-none"
               >
                 Pay now
               </button>
-            )}
+            ) : null}
           </div>
         </div>
       </motion.div>
     </div>
   );
 }
-
-
 function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -1202,7 +1522,21 @@ export default function PurchaseInvoicePage() {
   const [isUploadDrawerOpen, setIsUploadDrawerOpen] = useState(false);
   const [uploadDrawerMode, setUploadDrawerMode] = useState<UploadDrawerMode>("upload");
   const [selectedHistoryEntry, setSelectedHistoryEntry] = useState<HistoryEntry | null>(null);
-  const [viewingInvoice, setViewingInvoice] = useState<(typeof purchaseInvoices)[number] | null>(null);
+  const [purchaseInvoices, setPurchaseInvoices] = useState<PurchaseInvoiceRecord[]>([]);
+  const [viewingInvoice, setViewingInvoice] = useState<PurchaseInvoiceRecord | null>(null);
+  const [agentColorMap, setAgentColorMap] = useState<AgentColorMap>(() =>
+    getStoredAgentColorMap(),
+  );
+  const [animateHistoryRows, setAnimateHistoryRows] = useState(true);
+  const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
+  const [isLoadingMoreInvoices, setIsLoadingMoreInvoices] = useState(false);
+  const [hasMoreInvoices, setHasMoreInvoices] = useState(true);
+  const [invoiceOffset, setInvoiceOffset] = useState(0);
+  const [loadError, setLoadError] = useState("");
+  const [loadMoreError, setLoadMoreError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [detailError, setDetailError] = useState("");
+  const [isLoadingInvoiceDetail, setIsLoadingInvoiceDetail] = useState(false);
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
   const [isStatusMenuOpen, setIsStatusMenuOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("date");
@@ -1210,17 +1544,48 @@ export default function PurchaseInvoicePage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const sortMenuRef = useRef<HTMLDivElement>(null);
   const statusMenuRef = useRef<HTMLDivElement>(null);
+  const invoiceTableScrollRef = useRef<HTMLDivElement>(null);
+  const isFetchingInvoicesRef = useRef(false);
   const shouldReduceMotion = useReducedMotion();
   const currentSortOption = sortOptions.find((option) => option.key === sortKey);
   const currentStatusOption = statusOptions.find(
     (option) => option.key === statusFilter,
   );
   const isHistoryTab = activeTab === "history";
-  const sortedInvoices = [...purchaseInvoices]
-    .filter((invoice) =>
-      statusFilter === "all" ? true : invoice.paymentStatus === statusFilter,
-    )
-    .sort((firstInvoice, secondInvoice) => {
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+  const filteredHistory = invoiceHistory.filter((history) => {
+    if (!normalizedSearchQuery) return true;
+
+    return [history.taskName, history.supplier, history.status, history.type]
+      .join(" ")
+      .toLowerCase()
+      .includes(normalizedSearchQuery);
+  });
+  const filteredInvoices = useMemo(() => {
+    const normalizedInvoiceSearch = searchQuery.trim().toLowerCase();
+
+    return purchaseInvoices
+      .filter((invoice) =>
+        statusFilter === "all" ? true : invoice.paymentStatus === statusFilter,
+      )
+      .filter((invoice) => {
+        if (!normalizedInvoiceSearch) return true;
+
+        return [
+          invoice.invoiceNo,
+          invoice.supplier,
+          invoice.agent,
+          invoice.paymentStatus,
+          invoice.creditorType ?? "",
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(normalizedInvoiceSearch);
+      });
+  }, [purchaseInvoices, searchQuery, statusFilter]);
+
+  const sortedInvoices = useMemo(() => {
+    return [...filteredInvoices].sort((firstInvoice, secondInvoice) => {
       const firstValue = getSortValue(firstInvoice, sortKey);
       const secondValue = getSortValue(secondInvoice, sortKey);
 
@@ -1233,6 +1598,235 @@ export default function PurchaseInvoicePage() {
       const comparison = String(firstValue).localeCompare(String(secondValue));
       return sortDirection === "desc" ? comparison * -1 : comparison;
     });
+  }, [filteredInvoices, sortDirection, sortKey]);
+
+  function registerAgentColors(agentNames: string[]) {
+    setAgentColorMap((currentMap) => {
+      const { changed, nextMap } = assignAgentColors(currentMap, agentNames);
+
+      if (!changed) {
+        return currentMap;
+      }
+
+      saveAgentColorMap(nextMap);
+      return nextMap;
+    });
+  }
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadInvoicePage(offset: number, mode: "replace" | "append") {
+      if (isFetchingInvoicesRef.current) {
+        return;
+      }
+
+      isFetchingInvoicesRef.current = true;
+
+      if (mode === "replace") {
+        setIsLoadingInvoices(true);
+        setLoadError("");
+        setLoadMoreError("");
+      } else {
+        setIsLoadingMoreInvoices(true);
+        setLoadMoreError("");
+      }
+
+      try {
+        const params = new URLSearchParams({
+          limit: String(INVOICE_PAGE_SIZE),
+          offset: String(offset),
+        });
+
+        if (statusFilter !== "all") {
+          params.set("status", statusFilter.toLowerCase());
+        }
+
+        const response = await apiFetch(`/api/purchase-invoice?${params.toString()}`, {
+          cache: "no-store",
+        });
+        const data = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | PurchaseInvoiceListResponse
+          | null;
+
+        if (!response.ok) {
+          throw new Error(
+            data && "error" in data && typeof data.error === "string" ? data.error : "failed",
+          );
+        }
+
+        const responseItems = (data as PurchaseInvoiceListResponse)?.items;
+        const items: PurchaseInvoiceListItem[] = Array.isArray(responseItems)
+          ? responseItems
+          : [];
+
+        if (ignore) return;
+
+        const nextInvoices = items.map(mapApiItemToInvoiceRecord);
+        registerAgentColors(nextInvoices.map((invoice) => invoice.agent));
+        setHasMoreInvoices(items.length === INVOICE_PAGE_SIZE);
+        setInvoiceOffset(offset + items.length);
+
+        if (mode === "replace") {
+          setPurchaseInvoices(nextInvoices);
+          return;
+        }
+
+        setPurchaseInvoices((currentInvoices) => {
+          const seenKeys = new Set(
+            currentInvoices.map((invoice) => invoice.docKey ?? invoice.invoiceNo),
+          );
+          const appendedInvoices = nextInvoices.filter(
+            (invoice) => !seenKeys.has(invoice.docKey ?? invoice.invoiceNo),
+          );
+          return [...currentInvoices, ...appendedInvoices];
+        });
+      } catch {
+        if (ignore) return;
+
+        if (mode === "replace") {
+          setLoadError("Unable to load purchase invoices.");
+          setPurchaseInvoices([]);
+          setHasMoreInvoices(false);
+          setInvoiceOffset(0);
+        } else {
+          setLoadMoreError("Unable to load more purchase invoices.");
+        }
+      } finally {
+        if (!ignore) {
+          if (mode === "replace") {
+            setIsLoadingInvoices(false);
+          } else {
+            setIsLoadingMoreInvoices(false);
+          }
+        }
+
+        isFetchingInvoicesRef.current = false;
+      }
+    }
+
+    void loadInvoicePage(0, "replace");
+
+    return () => {
+      ignore = true;
+      isFetchingInvoicesRef.current = false;
+    };
+  }, [statusFilter]);
+
+  useEffect(() => {
+    if (activeTab !== "invoices") {
+      return;
+    }
+
+    const scrollContainer = invoiceTableScrollRef.current;
+    if (!scrollContainer) {
+      return;
+    }
+    const container = scrollContainer;
+
+    function tryLoadMore() {
+      const distanceToBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight;
+
+      if (
+        distanceToBottom > INVOICE_LOAD_MORE_THRESHOLD_PX ||
+        !hasMoreInvoices ||
+        isLoadingInvoices ||
+        isLoadingMoreInvoices ||
+        isFetchingInvoicesRef.current
+      ) {
+        return;
+      }
+
+      void (async () => {
+        isFetchingInvoicesRef.current = true;
+        setIsLoadingMoreInvoices(true);
+        setLoadMoreError("");
+
+        try {
+          const params = new URLSearchParams({
+            limit: String(INVOICE_PAGE_SIZE),
+            offset: String(invoiceOffset),
+          });
+
+          if (statusFilter !== "all") {
+            params.set("status", statusFilter.toLowerCase());
+          }
+
+          const response = await apiFetch(`/api/purchase-invoice?${params.toString()}`, {
+            cache: "no-store",
+          });
+          const data = (await response.json().catch(() => null)) as
+            | { error?: string }
+            | PurchaseInvoiceListResponse
+            | null;
+
+          if (!response.ok) {
+            throw new Error(
+              data && "error" in data && typeof data.error === "string" ? data.error : "failed",
+            );
+          }
+
+          const responseItems = (data as PurchaseInvoiceListResponse)?.items;
+          const items: PurchaseInvoiceListItem[] = Array.isArray(responseItems)
+            ? responseItems
+            : [];
+          const nextInvoices = items.map(mapApiItemToInvoiceRecord);
+          registerAgentColors(nextInvoices.map((invoice) => invoice.agent));
+          setHasMoreInvoices(items.length === INVOICE_PAGE_SIZE);
+          setInvoiceOffset((currentOffset) => currentOffset + items.length);
+          setPurchaseInvoices((currentInvoices) => {
+            const seenKeys = new Set(
+              currentInvoices.map((invoice) => invoice.docKey ?? invoice.invoiceNo),
+            );
+            const appendedInvoices = nextInvoices.filter(
+              (invoice) => !seenKeys.has(invoice.docKey ?? invoice.invoiceNo),
+            );
+            return [...currentInvoices, ...appendedInvoices];
+          });
+        } catch {
+          setLoadMoreError("Unable to load more purchase invoices.");
+        } finally {
+          isFetchingInvoicesRef.current = false;
+          setIsLoadingMoreInvoices(false);
+        }
+      })();
+    }
+
+    container.addEventListener("scroll", tryLoadMore, { passive: true });
+    tryLoadMore();
+
+    return () => {
+      container.removeEventListener("scroll", tryLoadMore);
+    };
+  }, [
+    activeTab,
+    hasMoreInvoices,
+    invoiceOffset,
+    isLoadingInvoices,
+    isLoadingMoreInvoices,
+    statusFilter,
+  ]);
+
+  useEffect(() => {
+    if (activeTab !== "history") {
+      return;
+    }
+
+    if (!animateHistoryRows && filteredHistory.length > 0) {
+      return;
+    }
+
+    if (filteredHistory.length > 0) {
+      const animationTimer = window.setTimeout(
+        () => setAnimateHistoryRows(false),
+        ROW_ANIMATION_SETTLE_MS,
+      );
+
+      return () => window.clearTimeout(animationTimer);
+    }
+  }, [activeTab, animateHistoryRows, filteredHistory.length]);
 
   function setSortColumn(nextSortKey: SortKey) {
     if (nextSortKey === sortKey) {
@@ -1281,17 +1875,53 @@ export default function PurchaseInvoicePage() {
     setIsUploadDrawerOpen(true);
   }
 
+  async function openInvoiceDetail(invoice: PurchaseInvoiceRecord) {
+    registerAgentColors([invoice.agent]);
+    setViewingInvoice(invoice);
+    setDetailError("");
+    setIsLoadingInvoiceDetail(true);
+
+    if (!invoice.docKey) {
+      setDetailError("Detail is unavailable because docKey was not returned by the list API.");
+      setIsLoadingInvoiceDetail(false);
+      return;
+    }
+
+    try {
+      const response = await apiFetch(
+        `/api/purchase-invoice/detail?docKey=${encodeURIComponent(invoice.docKey)}`,
+        { cache: "no-store" },
+      );
+      const data = (await response.json().catch(() => null)) as
+        | { error?: string }
+        | PurchaseInvoiceDetailResponse
+        | null;
+
+      if (!response.ok) {
+        throw new Error(data && "error" in data && typeof data.error === "string" ? data.error : "failed");
+      }
+
+      setViewingInvoice((current) =>
+        current ? mergeInvoiceDetail(current, data as PurchaseInvoiceDetailResponse) : current,
+      );
+    } catch {
+      setDetailError("Unable to load invoice detail.");
+    } finally {
+      setIsLoadingInvoiceDetail(false);
+    }
+  }
+
   return (
-    <div className="dashboard-shell min-h-screen bg-white md:flex">
+    <div className="dashboard-shell h-screen overflow-hidden bg-white md:flex">
       <DashboardSidebar
         activeItem="purchase-invoice"
         isMobileOpen={isSidebarOpen}
         onMobileClose={() => setIsSidebarOpen(false)}
       />
 
-      <div className="flex min-w-0 flex-1 overflow-hidden">
-      <main className="min-w-0 flex-1 overflow-y-auto bg-white text-[#2c2c2b]">
-        <section className="flex min-h-screen flex-col">
+      <div className="flex h-full min-h-0 min-w-0 flex-1 overflow-hidden">
+      <main className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-white text-[#2c2c2b]">
+        <section className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
           <header className="flex h-[var(--dashboard-header-h)] items-center justify-between border-b border-[#e6e6e6] px-[var(--dashboard-main-x)]">
             <div className="flex min-w-0 items-center gap-2">
               <button
@@ -1335,7 +1965,7 @@ export default function PurchaseInvoicePage() {
                 {
                   key: "history",
                   label: "History",
-                  count: invoiceHistory.length,
+                  count: filteredHistory.length,
                   Icon: Clock3,
                 },
               ].map(({ key, label, count, Icon }) => {
@@ -1388,6 +2018,11 @@ export default function PurchaseInvoicePage() {
               <input
                 type="search"
                 placeholder={isHistoryTab ? "Search history..." : "Search invoices..."}
+                value={searchQuery}
+                onChange={(event) => {
+                  setAnimateHistoryRows(false);
+                  setSearchQuery(event.target.value);
+                }}
                 className="h-8 w-full rounded-[7px] border border-[#e6e6e6] bg-white pl-8.5 pr-2 text-[14px] leading-5 text-[#2c2c2b] outline-none transition-colors duration-75 placeholder:text-[#a39e98] focus:border-[#0075de] focus:ring-2 focus:ring-[#62aef0]/20"
               />
             </label>
@@ -1491,6 +2126,10 @@ export default function PurchaseInvoicePage() {
                           type="button"
                           role="menuitem"
                           onClick={() => {
+                            setPurchaseInvoices([]);
+                            setInvoiceOffset(0);
+                            setHasMoreInvoices(true);
+                            setLoadMoreError("");
                             setStatusFilter(option.key);
                             setIsStatusMenuOpen(false);
                           }}
@@ -1499,7 +2138,7 @@ export default function PurchaseInvoicePage() {
                           <span className="flex min-w-0 items-center gap-2">
                             <span
                               className="size-2 shrink-0 rounded-full"
-                              style={{ background: { all: "#d1d0ce", Paid: "#1f7a4d", Partial: "#f59e0b", Overdue: "#c2410c", Unpaid: "#a39e98" }[option.key] }}
+                              style={{ background: { all: "#d1d0ce", Paid: "#1f7a4d", Partial: "#f59e0b", Overdue: "#c2410c", Unpaid: "#a39e98", Cancelled: "#9ca3af" }[option.key] }}
                             />
                             <span className="min-w-0">
                               <span className="block truncate text-[13px] font-medium leading-5 text-[#2c2c2b]">
@@ -1530,7 +2169,10 @@ export default function PurchaseInvoicePage() {
           </div>
           <div className="mx-[var(--dashboard-main-x)] border-b border-[#e6e6e6]" />
 
-          <div className="min-h-0 flex-1 overflow-auto px-[var(--dashboard-main-x)]">
+          <div
+            ref={invoiceTableScrollRef}
+            className="h-full min-h-0 flex-1 overflow-auto px-[var(--dashboard-main-x)]"
+          >
             {activeTab === "invoices" ? (
             <table className="w-full min-w-[var(--invoice-table-min-w)] table-fixed border-separate border-spacing-0 text-left">
               <thead className="sticky top-0 z-10 bg-white">
@@ -1673,62 +2315,107 @@ export default function PurchaseInvoicePage() {
                 </tr>
               </thead>
               <tbody>
-                {sortedInvoices.map((invoice, index) => {
-                  return (
-                    <motion.tr
-                      key={invoice.invoiceNo}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="group h-[var(--dashboard-row-h)] bg-white transition-colors duration-75 hover:bg-[#f7f7f8]"
-                      initial={{ opacity: 0, x: shouldReduceMotion ? 0 : -24 }}
-                      transition={{
-                        delay: shouldReduceMotion ? 0 : index * 0.055,
-                        duration: shouldReduceMotion ? 0 : 0.28,
-                        ease: [0.22, 1, 0.36, 1],
-                      }}
-                    >
-                      <td className="border-b border-r border-[#f0efed] pl-6 pr-3 text-[14px] font-medium leading-5 text-[#2c2c2b]">
-                        <InvoiceNumberCell invoiceNo={invoice.invoiceNo} />
-                      </td>
-                      <td className="border-b border-r border-[#f0efed] px-3 text-[14px] font-normal leading-5 text-[#2c2c2b]">
-                        <SupplierCell supplier={invoice.supplier} />
-                      </td>
-                      <td className="border-b border-r border-[#f0efed] px-3 text-[14px] font-normal leading-5 text-[#5f5e59]">
-                        <DateCell date={invoice.date} />
-                      </td>
-                      <td className="border-b border-r border-[#f0efed] px-3">
-                        <AgentPill name={invoice.agent} />
-                      </td>
-                      <td className="border-b border-r border-[#f0efed] px-3">
-                        <PaymentStatusPill status={invoice.paymentStatus} />
-                      </td>
-                      <td className="border-b border-r border-[#f0efed] px-3 text-right">
-                        <AmountPill amount={invoice.amount} />
-                      </td>
-                      <td className="border-b border-[#f0efed] pl-3 pr-6 text-right">
-                        <div className="inline-flex items-center gap-1">
-                          <button
-                            type="button"
-                            className="inline-flex h-7 items-center rounded-[7px] border border-transparent px-2 text-[14px] font-medium leading-5 text-[#0075de] outline-none transition-colors duration-75 hover:border-[#2783DE] hover:bg-[#f7fbff] focus-visible:border-[#2783DE] focus-visible:bg-[#f7fbff] focus-visible:ring-2 focus-visible:ring-[#2783DE]/15 max-xl:hidden"
-                          >
-                            Pay
-                          </button>
-                          <button
-                            type="button"
-                            aria-label={`View ${invoice.invoiceNo}`}
-                            onClick={() => setViewingInvoice(invoice)}
-                            className="inline-flex size-7 items-center justify-center rounded-[7px] text-[#8f8983] outline-none transition-colors duration-75 hover:bg-[#ededee] hover:text-[#2c2c2b] focus-visible:bg-[#ededee] focus-visible:ring-1 focus-visible:ring-black/5"
-                          >
-                            <Ellipsis
-                              size={15}
-                              strokeWidth={1.9}
-                              aria-hidden="true"
-                            />
-                          </button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  );
-                })}
+                {isLoadingInvoices ? (
+                  <tr>
+                    <td colSpan={7} className="border-b border-[#f0efed] px-6 py-8 text-center">
+                      <span className="inline-flex items-center gap-2 text-[14px] text-[#8f8983]">
+                        <span className="size-[14px] animate-spin rounded-full border-[1.5px] border-[#0075de]/15 border-t-[#0075de]" />
+                        Loading purchase invoices...
+                      </span>
+                    </td>
+                  </tr>
+                ) : loadError ? (
+                  <tr>
+                    <td colSpan={7} className="border-b border-[#f0efed] px-6 py-8 text-center">
+                      <span className="text-[14px] text-[#c2410c]">{loadError}</span>
+                    </td>
+                  </tr>
+                ) : sortedInvoices.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="border-b border-[#f0efed] px-6 py-8 text-center">
+                      <span className="text-[14px] text-[#8f8983]">No purchase invoices found.</span>
+                    </td>
+                  </tr>
+                ) : (
+                  sortedInvoices.map((invoice) => {
+                    return (
+                      <tr
+                        key={invoice.docKey ?? invoice.invoiceNo}
+                        className="group h-[var(--dashboard-row-h)] bg-white transition-colors duration-75 hover:bg-[#f7f7f8]"
+                      >
+                        <td className="border-b border-r border-[#f0efed] pl-6 pr-3 text-[14px] font-medium leading-5 text-[#2c2c2b]">
+                          <InvoiceNumberCell invoiceNo={invoice.invoiceNo} />
+                        </td>
+                        <td className="border-b border-r border-[#f0efed] px-3 text-[14px] font-normal leading-5 text-[#2c2c2b]">
+                          <SupplierCell
+                            supplier={invoice.supplier}
+                            creditorType={invoice.creditorType}
+                          />
+                        </td>
+                        <td className="border-b border-r border-[#f0efed] px-3 text-[14px] font-normal leading-5 text-[#5f5e59]">
+                          <DateCell date={invoice.date} />
+                        </td>
+                        <td className="border-b border-r border-[#f0efed] px-3">
+                          <AgentPill
+                            name={invoice.agent}
+                            avatarColor={getAgentColor(invoice.agent, agentColorMap)}
+                          />
+                        </td>
+                        <td className="border-b border-r border-[#f0efed] px-3">
+                          <PaymentStatusPill status={invoice.paymentStatus} />
+                        </td>
+                        <td className="border-b border-r border-[#f0efed] px-3 text-right">
+                          <AmountPill amount={invoice.amount} />
+                        </td>
+                        <td className="border-b border-[#f0efed] pl-3 pr-6 text-right">
+                          <div className="inline-flex items-center gap-1">
+                            <button
+                              type="button"
+                              disabled={!invoice.canPay}
+                              className={`inline-flex h-7 items-center rounded-[7px] border border-transparent px-2 text-[14px] font-medium leading-5 outline-none transition-colors duration-75 max-xl:hidden ${
+                                invoice.canPay
+                                  ? "text-[#0075de] hover:border-[#2783DE] hover:bg-[#f7fbff] focus-visible:border-[#2783DE] focus-visible:bg-[#f7fbff] focus-visible:ring-2 focus-visible:ring-[#2783DE]/15"
+                                  : "cursor-not-allowed text-[#b9b4ae]"
+                              }`}
+                            >
+                              Pay
+                            </button>
+                            <button
+                              type="button"
+                              aria-label={`View ${invoice.invoiceNo}`}
+                              title={`View ${invoice.invoiceNo}`}
+                              onClick={() => openInvoiceDetail(invoice)}
+                              className="inline-flex size-7 items-center justify-center rounded-[7px] text-[#8f8983] outline-none transition-colors duration-75 hover:bg-[#ededee] hover:text-[#2c2c2b] focus-visible:bg-[#ededee] focus-visible:ring-1 focus-visible:ring-black/5"
+                            >
+                              <Ellipsis
+                                size={15}
+                                strokeWidth={1.9}
+                                aria-hidden="true"
+                              />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+                {!isLoadingInvoices && sortedInvoices.length > 0 && isLoadingMoreInvoices ? (
+                  <tr>
+                    <td colSpan={7} className="border-b border-[#f0efed] px-6 py-4 text-center">
+                      <span className="inline-flex items-center gap-2 text-[13px] text-[#8f8983]">
+                        <span className="size-[13px] animate-spin rounded-full border-[1.5px] border-[#0075de]/15 border-t-[#0075de]" />
+                        Loading more invoices...
+                      </span>
+                    </td>
+                  </tr>
+                ) : null}
+                {!isLoadingInvoices && sortedInvoices.length > 0 && loadMoreError ? (
+                  <tr>
+                    <td colSpan={7} className="border-b border-[#f0efed] px-6 py-4 text-center">
+                      <span className="text-[13px] text-[#c2410c]">{loadMoreError}</span>
+                    </td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
             ) : (
@@ -1771,18 +2458,36 @@ export default function PurchaseInvoicePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {invoiceHistory.map((history, index) => (
-                    <motion.tr
-                      key={`${history.taskName}-${history.supplier}`}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="group h-[var(--dashboard-row-h)] bg-white transition-colors duration-75 hover:bg-[#f7f7f8]"
-                      initial={{ opacity: 0, x: shouldReduceMotion ? 0 : -24 }}
-                      transition={{
-                        delay: shouldReduceMotion ? 0 : index * 0.055,
-                        duration: shouldReduceMotion ? 0 : 0.28,
-                        ease: [0.22, 1, 0.36, 1],
-                      }}
-                    >
+                  {filteredHistory.map((history, index) => {
+                    const shouldAnimateHistoryRow =
+                      animateHistoryRows && index < ROW_ANIMATION_VISIBLE_LIMIT;
+
+                    return (
+                      <motion.tr
+                        key={`${history.taskName}-${history.supplier}`}
+                        animate={shouldAnimateHistoryRow ? { opacity: 1, x: 0 } : undefined}
+                        className="group h-[var(--dashboard-row-h)] bg-white transition-colors duration-75 hover:bg-[#f7f7f8]"
+                        initial={
+                          shouldAnimateHistoryRow
+                            ? { opacity: 0, x: shouldReduceMotion ? 0 : -24 }
+                            : false
+                        }
+                        transition={
+                          shouldAnimateHistoryRow
+                            ? {
+                                delay: shouldReduceMotion
+                                  ? 0
+                                  : (Math.min(index, ROW_ANIMATION_MAX_DELAY_INDEX) *
+                                      ROW_ANIMATION_DELAY_STEP_MS) /
+                                    1000,
+                                duration: shouldReduceMotion
+                                  ? 0
+                                  : ROW_ANIMATION_DURATION_MS / 1000,
+                                ease: [0.22, 1, 0.36, 1],
+                              }
+                            : undefined
+                        }
+                      >
                       <td className="border-b border-r border-[#f0efed] pl-6 pr-3 text-[14px] font-medium leading-5 text-[#2c2c2b]">
                         <div className="flex items-center gap-2 min-w-0">
                           <span className="truncate">{history.taskName}</span>
@@ -1809,8 +2514,9 @@ export default function PurchaseInvoicePage() {
                           </button>
                         </div>
                       </td>
-                    </motion.tr>
-                  ))}
+                      </motion.tr>
+                    );
+                  })}
                 </tbody>
               </table>
             )}
@@ -1846,7 +2552,14 @@ export default function PurchaseInvoicePage() {
         {viewingInvoice ? (
           <ViewInvoiceModal
             invoice={viewingInvoice}
-            onClose={() => setViewingInvoice(null)}
+            agentColor={getAgentColor(viewingInvoice.agent, agentColorMap)}
+            isLoading={isLoadingInvoiceDetail}
+            detailError={detailError}
+            onClose={() => {
+              setViewingInvoice(null);
+              setDetailError("");
+              setIsLoadingInvoiceDetail(false);
+            }}
           />
         ) : null}
       </AnimatePresence>
@@ -1854,4 +2567,3 @@ export default function PurchaseInvoicePage() {
     </div>
   );
 }
-

@@ -7,21 +7,24 @@ import {
   type Transition,
   useReducedMotion,
 } from "motion/react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
-const STORAGE_KEY = "dashboard-language";
+import { apiFetch } from "@/lib/api";
 
 const languages = [
   {
     value: "en-US",
+    apiValue: "en",
     title: "English (US)",
     subtitle: "Use English for workspace labels and messages.",
     isChinese: false,
   },
   {
     value: "zh-SG",
-    title: "\u7b80\u4f53\u4e2d\u6587",
-    subtitle: "\u4f7f\u7528\u7b80\u4f53\u4e2d\u6587\u4f5c\u4e3a\u5de5\u4f5c\u533a\u8bed\u8a00\u3002",
+    apiValue: "zh",
+    title: "简体中文",
+    subtitle:
+      "使用简体中文作为工作区语言。",
     isChinese: true,
   },
 ] as const;
@@ -29,68 +32,46 @@ const languages = [
 type Language = (typeof languages)[number];
 type LanguageValue = Language["value"];
 
+const READONLY_ROLES = ["employee", "support"] as const;
+
 const expenseItems = [
-  {
-    key: "EPF",
-    label: {
-      "en-US": "EPF",
-      "zh-SG": "EPF",
-    },
-  },
-  {
-    key: "SOSCO",
-    label: {
-      "en-US": "SOSCO",
-      "zh-SG": "SOSCO",
-    },
-  },
+  { key: "EPF", label: { "en-US": "EPF", "zh-SG": "EPF" } },
+  { key: "SOSCO", label: { "en-US": "SOSCO", "zh-SG": "SOSCO" } },
   {
     key: "Tax Expense",
-    label: {
-      "en-US": "Tax Expense",
-      "zh-SG": "\u7a0e\u52a1\u8d39\u7528",
-    },
+    label: { "en-US": "Tax Expense", "zh-SG": "税务费用" },
   },
   {
     key: "Rental",
-    label: {
-      "en-US": "Rental",
-      "zh-SG": "\u79df\u91d1",
-    },
+    label: { "en-US": "Rental", "zh-SG": "租金" },
   },
   {
     key: "Staff Allowance",
     label: {
       "en-US": "Staff Allowance",
-      "zh-SG": "\u5458\u5de5\u6d25\u8d34",
+      "zh-SG": "员工津贴",
     },
   },
   {
     key: "Water Expense",
-    label: {
-      "en-US": "Water Expense",
-      "zh-SG": "\u6c34\u8d39",
-    },
+    label: { "en-US": "Water Expense", "zh-SG": "水费" },
   },
   {
     key: "Staff Cost",
-    label: {
-      "en-US": "Staff Cost",
-      "zh-SG": "\u5458\u5de5\u6210\u672c",
-    },
+    label: { "en-US": "Staff Cost", "zh-SG": "员工成本" },
   },
   {
     key: "Communication",
     label: {
       "en-US": "Communication",
-      "zh-SG": "\u901a\u8baf\u8d39",
+      "zh-SG": "通讯费",
     },
   },
   {
     key: "Electricity Expense",
     label: {
       "en-US": "Electricity Expense",
-      "zh-SG": "\u7535\u8d39",
+      "zh-SG": "电费",
     },
   },
 ] as const;
@@ -109,6 +90,7 @@ const translations: Record<
     companyHelper: string;
     expensesHelper: string;
     continue: string;
+    readonlyNotice: string;
   }
 > = {
   "en-US": {
@@ -125,42 +107,41 @@ const translations: Record<
     expensesHelper:
       "These values are only used to understand your reporting context. You can change them later.",
     continue: "Continue",
+    readonlyNotice:
+      "Only workspace owners and admins can change these settings.",
   },
   "zh-SG": {
-    workspaceTitle: "\u8bbe\u7f6e\u4f60\u7684\u5de5\u4f5c\u533a",
-    expensesTitle: "\u8bbe\u7f6e\u4f60\u7684\u8d39\u7528\u9879\u76ee",
+    workspaceTitle: "设置你的工作区",
+    expensesTitle: "设置你的费用项目",
     expensesSubtitle:
-      "\u8f93\u5165\u5e38\u89c1\u7684\u6bcf\u6708\u91d1\u989d\uff0c\u8ba9 AI \u66f4\u597d\u5730\u751f\u6210\u62a5\u8868\u3002",
-    languageLegend: "\u5de5\u4f5c\u533a\u8bed\u8a00",
-    companyLabel: "\u4f60\u7684\u516c\u53f8\u4e3b\u8981\u505a\u4ec0\u4e48\uff1f",
+      "输入常见的每月金额，让 AI 更好地生成报表。",
+    languageLegend: "工作区语言",
+    companyLabel: "你的公司主要做什么？",
     companyPlaceholder:
-      "\u4f8b\u5982\uff1a\u6211\u4eec\u5206\u9500\u529e\u516c\u7528\u54c1\uff0c\u5e76\u7ba1\u7406\u56fa\u5b9a\u4f9b\u5e94\u5546\u53d1\u7968\u3002",
+      "例如：我们分销办公用品，并管理固定供应商发票。",
     companyHelper:
-      "\u7b80\u77ed\u63cf\u8ff0\u53ef\u4ee5\u5e2e\u52a9\u5de5\u4f5c\u533a\u66f4\u8d34\u8fd1\u4f60\u7684\u65e5\u5e38\u4f5c\u4e1a\u3002",
+      "简短描述可以帮助工作区更贴近你的日常作业。",
     expensesHelper:
-      "\u8fd9\u4e9b\u91d1\u989d\u53ea\u7528\u4e8e\u7406\u89e3\u4f60\u7684\u62a5\u8868\u80cc\u666f\uff0c\u4e4b\u540e\u53ef\u4ee5\u518d\u4fee\u6539\u3002",
-    continue: "\u7ee7\u7eed",
+      "这些金额只用于理解你的报表背景，之后可以再修改。",
+    continue: "继续",
+    readonlyNotice:
+      "只有工作区拥有者和管理员才能更改这些设置。",
   },
 };
-
-function getStoredLanguage(): Language | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const storedValue = window.localStorage.getItem(STORAGE_KEY);
-  return languages.find((language) => language.value === storedValue) ?? null;
-}
 
 function WelcomeSetup({
   step,
   setStep,
+  readonly,
+  onComplete,
 }: Readonly<{
   step: SetupStep;
   setStep: (step: SetupStep) => void;
+  readonly: boolean;
+  onComplete: () => void;
 }>) {
   const [selectedLanguage, setSelectedLanguage] = useState<Language>(
-    () => getStoredLanguage() ?? languages[0],
+    languages[0],
   );
   const [companyDescription, setCompanyDescription] = useState("");
   const [expenseValues, setExpenseValues] = useState<Record<string, string>>(
@@ -169,7 +150,8 @@ function WelcomeSetup({
         expenseItems.map((expense) => [expense.key, ""]),
       ) as Record<string, string>,
   );
-  const [isLoadingNextStep, setIsLoadingNextStep] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   const shouldReduceMotion = useReducedMotion();
   const copy = translations[selectedLanguage.value];
   const isChinese = selectedLanguage.isChinese;
@@ -186,19 +168,68 @@ function WelcomeSetup({
 
   function handleLanguageChange(language: Language) {
     setSelectedLanguage(language);
-    window.localStorage.setItem(STORAGE_KEY, language.value);
     document.documentElement.setAttribute("lang", language.value);
   }
 
-  function handleWorkspaceContinue() {
-    setIsLoadingNextStep(true);
-    window.setTimeout(() => {
-      setIsLoadingNextStep(false);
-      setStep("expenses");
-    }, 650);
+  async function saveCompanySettings() {
+    const normalizedExpenses = expenseItems.map(
+      (expense) => expenseValues[expense.key]?.trim() ?? "",
+    );
+
+    const res = await apiFetch("/api/settings/company", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        companyDescription,
+        expenseCategories: normalizedExpenses,
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error("company_save_failed");
+    }
+  }
+
+  async function handleWorkspaceContinue() {
+    setSaveError(false);
+    setIsSubmitting(true);
+    try {
+      const res = await apiFetch("/api/settings/user", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language: selectedLanguage.apiValue }),
+      });
+      if (!res.ok) {
+        setSaveError(true);
+        return;
+      }
+    } catch {
+      setSaveError(true);
+      return;
+    } finally {
+      setIsSubmitting(false);
+    }
+    setStep("expenses");
+  }
+
+  async function handleComplete() {
+    setSaveError(false);
+    setIsSubmitting(true);
+
+    try {
+      if (!readonly) {
+        await saveCompanySettings();
+      }
+      onComplete();
+    } catch {
+      setSaveError(true);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function handleExpenseChange(expense: string, value: string) {
+    if (readonly) return;
     setExpenseValues((currentValues) => ({
       ...currentValues,
       [expense]: value.replace(/[^\d.]/g, ""),
@@ -277,11 +308,7 @@ function WelcomeSetup({
                 <motion.fieldset
                   variants={{
                     hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 10 },
-                    show: {
-                      opacity: 1,
-                      y: 0,
-                      transition: itemTransition,
-                    },
+                    show: { opacity: 1, y: 0, transition: itemTransition },
                   }}
                 >
                   <legend className="mb-3 text-[15px] font-medium leading-5 text-[#31302e]">
@@ -289,8 +316,8 @@ function WelcomeSetup({
                   </legend>
                   <div className="grid gap-3 sm:grid-cols-2">
                     {languages.map((language) => {
-                      const isSelected = language.value === selectedLanguage.value;
-
+                      const isSelected =
+                        language.value === selectedLanguage.value;
                       return (
                         <motion.button
                           key={language.value}
@@ -325,7 +352,9 @@ function WelcomeSetup({
                               <motion.span
                                 animate={{ scale: 1 }}
                                 className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#0075de] text-white"
-                                initial={{ scale: shouldReduceMotion ? 1 : 0.86 }}
+                                initial={{
+                                  scale: shouldReduceMotion ? 1 : 0.86,
+                                }}
                                 transition={itemTransition}
                               >
                                 <Check size={13} aria-hidden="true" />
@@ -344,11 +373,7 @@ function WelcomeSetup({
                   className="block"
                   variants={{
                     hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 10 },
-                    show: {
-                      opacity: 1,
-                      y: 0,
-                      transition: itemTransition,
-                    },
+                    show: { opacity: 1, y: 0, transition: itemTransition },
                   }}
                 >
                   <span className="mb-2 block text-[15px] font-medium leading-5 text-[#31302e]">
@@ -356,12 +381,19 @@ function WelcomeSetup({
                   </span>
                   <textarea
                     value={companyDescription}
-                    onChange={(event) =>
-                      setCompanyDescription(event.target.value)
-                    }
+                    onChange={(event) => {
+                      if (!readonly)
+                        setCompanyDescription(event.target.value);
+                    }}
+                    disabled={readonly}
+                    title={readonly ? copy.readonlyNotice : undefined}
                     placeholder={copy.companyPlaceholder}
                     rows={5}
-                    className="min-h-[132px] w-full resize-none rounded-[8px] border border-[#e6e6e6] bg-white px-4 py-3 text-[15px] leading-6 text-[#000000] shadow-[0_1px_2px_rgba(0,0,0,0.04)] outline-none transition placeholder:text-[#a39e98] focus:border-[#0075de] focus:ring-4 focus:ring-[#62aef0]/20"
+                    className={`min-h-[132px] w-full resize-none rounded-[8px] border border-[#e6e6e6] bg-white px-4 py-3 text-[15px] leading-6 text-[#000000] shadow-[0_1px_2px_rgba(0,0,0,0.04)] outline-none transition placeholder:text-[#a39e98] focus:border-[#0075de] focus:ring-4 focus:ring-[#62aef0]/20 ${
+                      readonly
+                        ? "cursor-not-allowed opacity-50 bg-[#f6f5f4]"
+                        : ""
+                    }`}
                   />
                   <span className="mt-2 block text-[13px] leading-5 text-[#615d59]">
                     {copy.companyHelper}
@@ -370,21 +402,17 @@ function WelcomeSetup({
 
                 <motion.button
                   type="button"
-                  disabled={isLoadingNextStep}
+                  disabled={isSubmitting}
                   onClick={handleWorkspaceContinue}
                   className="relative flex h-11 w-full items-center justify-center gap-2 rounded-[8px] bg-[#0075de] px-5 text-[16px] font-semibold text-white shadow-[0_1px_2px_rgba(0,91,171,0.28)] transition hover:bg-[#0b83ea] focus:outline-none focus:ring-4 focus:ring-[#62aef0]/25 disabled:cursor-not-allowed disabled:bg-[#62aef0]"
                   variants={{
                     hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 10 },
-                    show: {
-                      opacity: 1,
-                      y: 0,
-                      transition: itemTransition,
-                    },
+                    show: { opacity: 1, y: 0, transition: itemTransition },
                   }}
                   whileTap={shouldReduceMotion ? undefined : { scale: 0.992 }}
                 >
                   {copy.continue}
-                  {isLoadingNextStep ? (
+                  {isSubmitting ? (
                     <span
                       aria-hidden="true"
                       className="absolute right-4 size-4 animate-spin rounded-full border-2 border-white/45 border-t-white"
@@ -393,6 +421,19 @@ function WelcomeSetup({
                     <ChevronRight size={17} aria-hidden="true" />
                   )}
                 </motion.button>
+
+                {saveError ? (
+                  <motion.p
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center text-[13px] text-red-500"
+                    initial={{ opacity: 0, y: 4 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {selectedLanguage.value === "zh-SG"
+                      ? "保存失败，请重试。"
+                      : "Failed to save. Please try again."}
+                  </motion.p>
+                ) : null}
               </motion.div>
             ) : (
               <motion.div
@@ -435,8 +476,14 @@ function WelcomeSetup({
                         onChange={(event) =>
                           handleExpenseChange(expense.key, event.target.value)
                         }
+                        disabled={readonly}
+                        title={readonly ? copy.readonlyNotice : undefined}
                         placeholder="0.00"
-                        className="h-11 w-full rounded-[8px] border border-[#e6e6e6] bg-white px-4 text-[15px] text-[#000000] shadow-[0_1px_2px_rgba(0,0,0,0.04)] outline-none transition placeholder:text-[#a39e98] focus:border-[#0075de] focus:ring-4 focus:ring-[#62aef0]/20"
+                        className={`h-11 w-full rounded-[8px] border border-[#e6e6e6] bg-white px-4 text-[15px] text-[#000000] shadow-[0_1px_2px_rgba(0,0,0,0.04)] outline-none transition placeholder:text-[#a39e98] focus:border-[#0075de] focus:ring-4 focus:ring-[#62aef0]/20 ${
+                          readonly
+                            ? "cursor-not-allowed opacity-50 bg-[#f6f5f4]"
+                            : ""
+                        }`}
                       />
                     </motion.label>
                   ))}
@@ -446,11 +493,7 @@ function WelcomeSetup({
                   className="text-[13px] leading-5 text-[#615d59]"
                   variants={{
                     hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 8 },
-                    show: {
-                      opacity: 1,
-                      y: 0,
-                      transition: itemTransition,
-                    },
+                    show: { opacity: 1, y: 0, transition: itemTransition },
                   }}
                 >
                   {copy.expensesHelper}
@@ -458,19 +501,24 @@ function WelcomeSetup({
 
                 <motion.button
                   type="button"
-                  className="flex h-11 w-full items-center justify-center gap-2 rounded-[8px] bg-[#0075de] px-5 text-[16px] font-semibold text-white shadow-[0_1px_2px_rgba(0,91,171,0.28)] transition hover:bg-[#0b83ea] focus:outline-none focus:ring-4 focus:ring-[#62aef0]/25"
+                  onClick={handleComplete}
+                  disabled={isSubmitting}
+                  className="flex h-11 w-full items-center justify-center gap-2 rounded-[8px] bg-[#0075de] px-5 text-[16px] font-semibold text-white shadow-[0_1px_2px_rgba(0,91,171,0.28)] transition hover:bg-[#0b83ea] focus:outline-none focus:ring-4 focus:ring-[#62aef0]/25 disabled:cursor-not-allowed disabled:bg-[#62aef0]"
                   variants={{
                     hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 10 },
-                    show: {
-                      opacity: 1,
-                      y: 0,
-                      transition: itemTransition,
-                    },
+                    show: { opacity: 1, y: 0, transition: itemTransition },
                   }}
                   whileTap={shouldReduceMotion ? undefined : { scale: 0.992 }}
                 >
                   {copy.continue}
-                  <ChevronRight size={17} aria-hidden="true" />
+                  {isSubmitting ? (
+                    <span
+                      aria-hidden="true"
+                      className="size-4 animate-spin rounded-full border-2 border-white/45 border-t-white"
+                    />
+                  ) : (
+                    <ChevronRight size={17} aria-hidden="true" />
+                  )}
                 </motion.button>
               </motion.div>
             )}
@@ -482,11 +530,51 @@ function WelcomeSetup({
 }
 
 export default function WelcomePage() {
+  const router = useRouter();
+  const [pageState, setPageState] = useState<"checking" | "ready">("checking");
+  const [readonly, setReadonly] = useState(false);
   const [step, setStep] = useState<SetupStep>("workspace");
+
+  useEffect(() => {
+    apiFetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { need_setup?: boolean; current_book?: { role: string } } | null) => {
+        if (!data) {
+          router.replace("/login");
+          return;
+        }
+        if (!data.need_setup) {
+          router.replace("/purchase-invoice");
+          return;
+        }
+        const role = data.current_book?.role ?? "";
+        setReadonly(
+          (READONLY_ROLES as readonly string[]).includes(role),
+        );
+        setPageState("ready");
+      })
+      .catch(() => router.replace("/login"));
+  }, [router]);
+
+  if (pageState === "checking") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <span
+          aria-label="Loading…"
+          className="size-8 animate-spin rounded-full border-2 border-[#e6e6e6] border-t-[#0075de]"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white text-[#000000]">
-      <WelcomeSetup step={step} setStep={setStep} />
+      <WelcomeSetup
+        step={step}
+        setStep={setStep}
+        readonly={readonly}
+        onComplete={() => router.replace("/purchase-invoice")}
+      />
     </div>
   );
 }
